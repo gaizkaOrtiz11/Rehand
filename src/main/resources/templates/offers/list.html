@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Offers', '/css/offers.css')}">
+    <meta charset="utf-8">
+    <title>Offers | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <h1>Offers</h1>
+                <p th:text="${sent} ? 'Offers you made on items from other members, and their answers.' : 'Offers other members made on your items. Answer within 48 hours.'">Offers other members made on your items. Answer within 48 hours.</p>
+            </div>
+        </div>
+
+        <nav class="offer-tabs" aria-label="Received or sent offers">
+            <ul class="offer-tabs__list">
+                <li>
+                    <a class="offer-tabs__link" href="/offers?tab=received" th:href="@{/offers(tab='received')}"
+                       th:classappend="${!sent} ? 'is-active'" th:attr="aria-current=${!sent} ? 'page'">
+                        Received
+                        <span class="offer-tabs__count" th:if="${waitingReceived > 0}" th:text="${waitingReceived}"
+                              th:title="${waitingReceived + ' waiting for your answer'}">2</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="offer-tabs__link" href="/offers?tab=sent" th:href="@{/offers(tab='sent')}"
+                       th:classappend="${sent} ? 'is-active'" th:attr="aria-current=${sent} ? 'page'">
+                        Sent
+                        <span class="offer-tabs__count" th:if="${waitingSent > 0}" th:text="${waitingSent}"
+                              th:title="${waitingSent + ' counter-offers waiting for your answer'}">1</span>
+                    </a>
+                </li>
+            </ul>
+
+            <form class="offer-filter" action="/offers" method="get" th:action="@{/offers}">
+                <input type="hidden" name="tab" value="received" th:value="${tab}">
+                <fieldset class="offer-filter__set">
+                    <legend class="visually-hidden">Show offers</legend>
+                    <label class="offer-filter__option" th:each="f : ${filters}">
+                        <input class="visually-hidden" type="radio" name="status" value="all" data-auto-submit
+                               th:value="${f.param}" th:checked="${filter == f}">
+                        <span th:text="${f.label}">All</span>
+                    </label>
+                </fieldset>
+                <button class="btn btn--secondary btn--sm offer-filter__apply" type="submit">Apply</button>
+            </form>
+        </nav>
+
+        <p class="offer-count-line" th:unless="${rows.empty}">
+            <span th:text="${rows.totalElements}">3</span>
+            <span th:text="${rows.totalElements == 1} ? 'negotiation' : 'negotiations'">negotiations</span>
+            <span th:if="${filter.name() != 'ALL'}" th:text="${'(' + #strings.toLowerCase(filter.label) + ')'}">(open)</span>
+        </p>
+
+        <ol class="offer-list" th:unless="${rows.empty}">
+            <li class="offer-row" th:each="r : ${rows.content}" th:with="o=${r.offer},l=${r.offer.listing}"
+                th:classappend="${r.waitingForMe} ? 'is-turn'">
+                <img class="offer-row__thumb" src="/img/placeholder-photo.svg" width="64" height="80" alt=""
+                     th:src="${l.firstPhotoUrl != null} ? @{${l.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                <div class="offer-row__main">
+                    <h2 class="offer-row__title">
+                        <a class="offer-row__link" href="/offers/1" th:href="@{/offers/{id}(id=${o.id})}"
+                           th:text="${l.title}">Listing title</a>
+                    </h2>
+                    <p class="offer-row__meta">
+                        <span th:text="${r.counterpartRole}">From</span>
+                        <span class="offer-row__who" th:text="${r.counterpart.username}">mikel_b</span>
+                        <span aria-hidden="true">/</span>
+                        Asking <span th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€38.00</span>
+                    </p>
+                </div>
+                <div class="offer-row__amount">
+                    <p class="offer-row__price price" th:text="'€' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">€30.00</p>
+                    <p class="offer-row__by"
+                       th:text="${(r.madeByMe ? 'Your ' : (o.madeBy.name() == 'BUYER' ? 'Buyer ' : 'Seller ')) + (o.parent == null ? 'offer' : 'counter')}">Buyer offer</p>
+                </div>
+                <div class="offer-row__state">
+                    <span class="badge" th:classappend="${'badge--' + r.badge}"
+                          th:text="#{${'offerStatus.' + r.displayStatus.name()}}">Pending</span>
+                    <p class="offer-row__turn" th:if="${r.waitingForMe}">Your turn<span th:if="${r.timeLeft != null}" th:text="${', ' + r.timeLeft + ' left'}">, 41 h left</span></p>
+                    <p class="offer-row__wait" th:if="${r.awaitingAnswer and !r.waitingForMe}">
+                        Waiting for <span th:text="${r.waitingForLabel}">ausra_k</span><span th:if="${r.timeLeft != null}" th:text="${', ' + r.timeLeft + ' left'}">, 41 h left</span>
+                    </p>
+                    <p class="offer-row__wait" th:if="${r.awaitingCheckout}">
+                        Checkout open<span th:if="${r.timeLeft != null}" th:text="${', ' + r.timeLeft + ' left'}">, 20 h left</span>
+                    </p>
+                    <p class="offer-row__wait" th:if="${r.used}">Bought at this price</p>
+                </div>
+            </li>
+        </ol>
+
+        <div class="empty-state" th:if="${rows.empty}">
+            <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/>
+                <circle cx="7.5" cy="7.5" r="1.5"/>
+            </svg>
+            <th:block th:if="${filter.name() != 'ALL'}">
+                <h2 class="empty-state__title">Nothing here with this filter</h2>
+                <p>Choose another filter or show every negotiation.</p>
+                <a class="btn btn--secondary" href="/offers" th:href="@{/offers(tab=${tab})}">Show all</a>
+            </th:block>
+            <th:block th:if="${filter.name() == 'ALL' and !sent}">
+                <h2 class="empty-state__title">No offers on your items yet</h2>
+                <p>When a member offers less than your asking price, you can accept, decline or counter here.</p>
+                <a class="btn btn--primary" href="/my/listings" th:href="@{/my/listings}">See your listings</a>
+            </th:block>
+            <th:block th:if="${filter.name() == 'ALL' and sent}">
+                <h2 class="empty-state__title">You have not made an offer yet</h2>
+                <p>Open any item for sale and use "Make an offer" to suggest a lower price.</p>
+                <a class="btn btn--primary" href="/listings" th:href="@{/listings}">Browse listings</a>
+            </th:block>
+        </div>
+
+        <div th:replace="~{listings/fragments :: pagination(${pageWindow}, ${rows.number + 1}, ${rows.totalPages}, ${pageBase})}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

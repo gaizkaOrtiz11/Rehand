@@ -1,0 +1,341 @@
+/*
+ * Rehand: account pages (register, login, profile). Plain CSS3 on top of app.css.
+ * Uses only the design tokens from app.css, the same three radii and the same single accent.
+ * No nesting, no @layer, no vendor prefixes.
+ *
+ * Sections: 1 Auth layout, 2 Perks, 3 Password field, 4 Avatar, 5 Profile layout,
+ * 6 Wallet card, 7 Link list, 8 Edit page, 9 Responsive, 10 Reduced motion.
+ */
+
+/* ---------- 1. Auth layout (register and login) ---------- */
+.auth {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+}
+
+.auth__aside {
+    padding: var(--space-6) var(--space-5);
+    background: var(--color-accent);
+    background: linear-gradient(160deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    color: var(--color-on-accent);
+}
+
+.auth__aside h2 {
+    color: var(--color-on-accent);
+}
+
+.auth__aside p {
+    margin-top: var(--space-3);
+    color: var(--color-accent-tint);
+}
+
+.auth__aside .btn {
+    margin-top: var(--space-5);
+}
+
+.auth__note {
+    margin-top: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ---------- 2. Perks (icon + title + sentence, used in the register aside) ---------- */
+.perks {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-5);
+}
+
+.perk {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: var(--space-3) var(--space-4);
+    align-items: start;
+}
+
+.perk__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: var(--radius-control);
+}
+
+.perk__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.perk__title {
+    color: var(--color-on-accent);
+    font-size: var(--text-base);
+    font-weight: 800;
+}
+
+.perk p {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+}
+
+/* ---------- 3. Password field: show/hide button and rule checklist ---------- */
+.password-field {
+    position: relative;
+}
+
+.password-field .input {
+    padding-right: 4.75rem;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: var(--space-2);
+    min-width: 3.5rem;
+    min-height: 2rem;
+    padding: 0 var(--space-3);
+    background: var(--color-surface-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+    background: var(--color-accent-tint);
+}
+
+.password-rules {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.password-rules li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.password-rules li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+}
+
+.password-rules li.is-met {
+    color: var(--color-accent-hover);
+    font-weight: 700;
+}
+
+.password-rules li.is-met::before {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.form > .password-rules {
+    margin-top: calc(var(--space-3) * -1);
+}
+
+.char-count {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 4. Avatar: photo, or an initial on a tinted circle ---------- */
+.avatar-frame {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 5rem;
+    height: 5rem;
+    overflow: hidden;
+    background: var(--color-accent-tint);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-accent-hover);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.avatar-frame--xl {
+    width: 7.5rem;
+    height: 7.5rem;
+    border-width: 3px;
+    border-color: var(--color-surface);
+    box-shadow: 0 0 0 1px var(--color-border), var(--shadow-card);
+    font-size: var(--text-4xl);
+}
+
+.avatar-frame__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- 5. Profile layout ---------- */
+.profile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.profile-card__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.profile-card__name {
+    overflow-wrap: anywhere;
+}
+
+.profile-card__bio {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.profile-card__empty {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.profile .meta-list dd {
+    overflow-wrap: anywhere;
+}
+
+/* ---------- 6. Wallet card ---------- */
+.wallet-card {
+    padding: var(--space-5);
+    background: var(--color-accent-tint);
+    border-radius: var(--radius-card);
+}
+
+.wallet-card__label {
+    color: var(--color-accent-hover);
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.wallet-card .wallet-card__amount {
+    margin-top: var(--space-1);
+    color: var(--color-text);
+    font-size: var(--text-4xl);
+    line-height: 1.1;
+}
+
+.wallet-card p {
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ---------- 7. Link list (rows with a chevron) ---------- */
+.link-list li + li {
+    border-top: 1px solid var(--color-border);
+}
+
+.link-list a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--color-text);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.link-list a:hover {
+    background: var(--color-accent-tint);
+    color: var(--color-text);
+}
+
+.link-list svg {
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-accent);
+}
+
+/* ---------- 8. Edit page ---------- */
+.avatar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.avatar-actions .preview-list {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.avatar-actions .preview-list:empty {
+    display: none;
+}
+
+.avatar-actions .preview-list img {
+    height: 10rem;
+}
+
+/* ---------- 9. Responsive ---------- */
+@media (min-width: 48em) {
+    .auth {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: var(--space-7);
+    }
+
+    .auth__aside {
+        position: sticky;
+        top: calc(var(--header-height) + var(--space-5));
+        padding: var(--space-7) var(--space-6);
+    }
+
+    .profile {
+        grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    }
+
+    .profile-card {
+        position: sticky;
+        top: calc(var(--header-height) + var(--space-5));
+    }
+}
+
+@media (min-width: 64em) {
+    .auth {
+        gap: var(--space-8);
+    }
+}
+
+/* ---------- 10. Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .password-toggle,
+    .link-list a {
+        transition: none;
+    }
+}

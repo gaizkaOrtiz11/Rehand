@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('My listings', '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>My listings | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <h1>My listings</h1>
+                <p><span th:text="${listings.totalElements}">3</span>
+                    <span th:text="${listings.totalElements == 1} ? 'listing' : 'listings'">listings</span>
+                    <span th:if="${filter != null}" th:text="${'with status ' + #strings.toLowerCase(filter.name())}"></span></p>
+            </div>
+            <a class="btn btn--primary" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+        </div>
+
+        <nav aria-label="Filter by status">
+            <ul class="tabs">
+                <li>
+                    <a class="chip" href="/my/listings" th:href="@{/my/listings}"
+                       th:classappend="${filter == null} ? 'is-active'"
+                       th:attr="aria-current=${filter == null} ? 'page'">All</a>
+                </li>
+                <li th:each="t : ${tabs}">
+                    <a class="chip" href="/my/listings" th:href="@{/my/listings(status=${t.name()})}"
+                       th:classappend="${filter != null and filter == t} ? 'is-active'"
+                       th:attr="aria-current=${filter != null and filter == t} ? 'page'"
+                       th:text="#{${'listingStatus.' + t.name()}}">Available</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="table-wrap" th:unless="${listings.empty}">
+            <table class="table">
+                <caption class="visually-hidden">Your listings</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Item</th>
+                        <th scope="col" class="num">Price</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="num">Views</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="l : ${listings.content}">
+                        <td>
+                            <div class="manage-item">
+                                <img class="manage-item__thumb" src="/img/placeholder-photo.svg" width="56" height="70" alt=""
+                                     th:src="${l.firstPhotoUrl != null} ? @{${l.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                                <div>
+                                    <a class="manage-item__title" href="/listings/1" th:href="@{/listings/{id}(id=${l.id})}"
+                                       th:text="${l.title}">Listing title</a>
+                                    <p class="manage-item__meta">
+                                        Listed
+                                        <time datetime="2026-01-01" th:datetime="${#temporals.format(l.createdAt, 'yyyy-MM-dd')}"
+                                              th:text="${#temporals.format(l.createdAt, 'd MMM yyyy')}">1 Jan 2026</time>
+                                        in <span th:text="${l.city}">Kaunas</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="num price" th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€24.50</td>
+                        <td>
+                            <span class="badge" th:classappend="${'badge--' + #strings.toLowerCase(l.status.name())}"
+                                  th:text="#{${'listingStatus.' + l.status.name()}}">Available</span>
+                        </td>
+                        <td class="num" th:text="${l.viewCount}">12</td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="btn btn--secondary btn--sm" href="/listings/1/edit" th:if="${l.editable}"
+                                   th:href="@{/listings/{id}/edit(id=${l.id})}">Edit</a>
+                                <form action="/listings/1/status" method="post" th:if="${l.status.name() == 'ACTIVE'}"
+                                      th:action="@{/listings/{id}/status(id=${l.id})}">
+                                    <input type="hidden" name="status" value="HIDDEN">
+                                    <input type="hidden" name="from" value="mine">
+                                    <button class="btn btn--secondary btn--sm" type="submit">Hide</button>
+                                </form>
+                                <form action="/listings/1/status" method="post" th:if="${l.status.name() == 'HIDDEN'}"
+                                      th:action="@{/listings/{id}/status(id=${l.id})}">
+                                    <input type="hidden" name="status" value="ACTIVE">
+                                    <input type="hidden" name="from" value="mine">
+                                    <button class="btn btn--secondary btn--sm" type="submit">Unhide</button>
+                                </form>
+                                <form action="/listings/1/delete" method="post"
+                                      th:if="${l.status.name() == 'ACTIVE' or l.status.name() == 'HIDDEN'}"
+                                      th:action="@{/listings/{id}/delete(id=${l.id})}"
+                                      data-confirm="Delete this listing? It will disappear for good.">
+                                    <button class="btn btn--ghost btn--text-danger btn--sm" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${listings.empty}">
+            <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 7l9-4 9 4-9 4-9-4z"/>
+                <path d="M3 7v10l9 4 9-4V7"/>
+                <path d="M12 11v10"/>
+            </svg>
+            <h2 class="empty-state__title" th:text="${filter == null} ? 'You have not listed anything yet' : 'No listings with this status'">You have not listed anything yet</h2>
+            <p th:if="${filter == null}">Listing an item takes a couple of minutes and a few photos.</p>
+            <a class="btn btn--primary" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+        </div>
+
+        <div th:replace="~{listings/fragments :: pagination(${pageWindow}, ${listings.number + 1}, ${listings.totalPages}, ${pageBase})}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${view.seller.username}, '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>Seller | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:with="seller=${view.seller}">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/" th:href="@{/}">Home</a></li>
+                <li><a href="/listings" th:href="@{/listings}">Listings</a></li>
+                <li><span aria-current="page" th:text="${seller.username}">ausra_k</span></li>
+            </ol>
+        </nav>
+
+        <section class="panel panel--raised seller-hero" aria-labelledby="seller-name">
+            <img class="avatar avatar--lg" src="/img/placeholder-photo.svg" width="80" height="80" alt=""
+                 th:if="${seller.avatarPath != null}" th:src="@{'/uploads/' + ${seller.avatarPath}}">
+            <span class="avatar avatar--lg avatar--initials" aria-hidden="true"
+                  th:if="${seller.avatarPath == null}" th:text="${view.initials}">AK</span>
+
+            <div class="seller-hero__text">
+                <h1 id="seller-name" th:text="${seller.username}">ausra_k</h1>
+                <p class="seller-hero__meta">
+                    <span th:if="${seller.city != null}" th:text="${seller.city}">Kaunas</span>
+                    <span>Member since
+                        <time datetime="2026-01" th:datetime="${#temporals.format(seller.createdAt, 'yyyy-MM')}"
+                              th:text="${#temporals.format(seller.createdAt, 'MMM yyyy')}">Jan 2026</time></span>
+                </p>
+                <p class="seller-hero__bio" th:if="${seller.bio != null}" th:text="${seller.bio}">Selling things I no longer use.</p>
+                <p class="seller-hero__bio" th:if="${isMe}">
+                    <a href="/profile" th:href="@{/profile}">Go to your profile</a>
+                    or <a href="/my/listings" th:href="@{/my/listings}">manage your listings</a>.
+                </p>
+            </div>
+
+            <p class="seller-stat">
+                <strong th:text="${view.activeCount}">12</strong>
+                <span th:text="${view.activeCount == 1} ? 'item for sale' : 'items for sale'">items for sale</span>
+            </p>
+        </section>
+
+        <section class="section" aria-labelledby="items-title">
+            <div class="section__header">
+                <h2 id="items-title">Items for sale</h2>
+            </div>
+
+            <ul class="listing-grid" th:unless="${view.listings.empty}">
+                <li th:each="l : ${view.listings.content}"><article th:replace="~{fragments/listing-card :: card(${l})}"></article></li>
+            </ul>
+
+            <div class="empty-state" th:if="${view.listings.empty}">
+                <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 7l9-4 9 4-9 4-9-4z"/>
+                    <path d="M3 7v10l9 4 9-4V7"/>
+                    <path d="M12 11v10"/>
+                </svg>
+                <h3 class="empty-state__title">Nothing for sale right now</h3>
+                <p>This member has no available items at the moment. Browse everything else on Rehand.</p>
+                <a class="btn btn--primary" href="/listings" th:href="@{/listings}">Browse listings</a>
+            </div>
+
+            <div th:replace="~{listings/fragments :: pagination(${pageWindow}, ${view.listings.number + 1}, ${view.listings.totalPages}, ${pageBase})}"></div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

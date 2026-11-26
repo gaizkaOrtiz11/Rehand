@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${editing ? 'Edit listing' : 'Sell an item'}, '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>Sell an item | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container container--medium">
+
+        <div class="page-header">
+            <div>
+                <h1 th:text="${editing} ? 'Edit your listing' : 'Sell an item'">Sell an item</h1>
+                <p th:text="${editing} ? 'Change the details, add photos or choose another cover photo.' : 'Add photos and a few details. Buyers can find your item right after you publish.'">Add photos and a few details.</p>
+            </div>
+        </div>
+
+        <!-- Existing photos: separate forms (a form cannot sit inside another form), so this panel comes before the main form. -->
+        <section class="panel form-section" aria-labelledby="current-photos-title" th:if="${editing}">
+            <h2 id="current-photos-title">Current photos</h2>
+            <ul class="photo-manager">
+                <li class="photo-tile" th:each="p, st : ${listing.photos}">
+                    <figure class="photo-tile__figure">
+                        <img src="/img/placeholder-photo.svg" width="136" height="136" loading="lazy"
+                             th:src="@{${p.url}}" th:alt="${'Photo ' + st.count + ' of ' + listing.title}" alt="Photo of the item">
+                    </figure>
+                    <p class="photo-tile__label">
+                        <span class="badge badge--accent" th:if="${st.first}">Cover photo</span>
+                    </p>
+                    <div class="photo-tile__actions">
+                        <form action="/listings/1/photos/1/cover" method="post" th:unless="${st.first}"
+                              th:action="@{/listings/{id}/photos/{photoId}/cover(id=${listing.id},photoId=${p.id})}">
+                            <button class="btn btn--secondary btn--sm" type="submit">Make cover</button>
+                        </form>
+                        <form action="/listings/1/photos/1/delete" method="post" th:if="${listing.photos.size() > 1}"
+                              th:action="@{/listings/{id}/photos/{photoId}/delete(id=${listing.id},photoId=${p.id})}"
+                              data-confirm="Remove this photo?">
+                            <button class="btn btn--ghost btn--text-danger btn--sm" type="submit">Remove</button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <form class="form" method="post" enctype="multipart/form-data" action="/listings/new"
+              th:action="${editing} ? @{/listings/{id}/edit(id=${listing.id})} : @{/listings/new}"
+              th:object="${listingForm}">
+
+            <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+            <section class="panel form-section" aria-labelledby="photos-title">
+                <h2 id="photos-title" th:text="${editing} ? 'Add more photos' : 'Photos'">Photos</h2>
+                <div class="field" th:classappend="${editing} ? '' : 'is-required'">
+                    <label class="label" for="photos">Choose images</label>
+                    <input class="input" id="photos" name="photos" type="file" multiple
+                           accept="image/jpeg,image/png,image/webp" aria-describedby="photos-help"
+                           data-preview="#photo-previews"
+                           th:required="${!editing}"
+                           th:disabled="${editing and listing.photos.size() >= maxPhotos}">
+                    <div class="field-help" id="photos-help">
+                        <p class="field-hint" th:unless="${editing}"
+                           th:text="${'Up to ' + maxPhotos + ' photos, JPEG, PNG or WebP, 5 MB each. The first photo is the cover.'}">Up to 8 photos.</p>
+                        <p class="field-hint" th:if="${editing}"
+                           th:text="${'This listing has ' + listing.photos.size() + ' of ' + maxPhotos + ' photos. New photos are added after the current ones.'}">This listing has 3 of 8 photos.</p>
+                    </div>
+                    <div class="preview-list" id="photo-previews" aria-live="polite"></div>
+                </div>
+            </section>
+
+            <section class="panel form-section" aria-labelledby="details-title">
+                <h2 id="details-title">Details</h2>
+                <div class="form-grid">
+                    <div class="field--wide">
+                        <div th:replace="~{fragments/forms :: textField('title', 'Title', 'text', true, 'Brand, model and the key detail, 3 to 120 characters.')}"></div>
+                    </div>
+                    <div class="field--wide">
+                        <div th:replace="~{fragments/forms :: textarea('description', 'Description', 6, true, 'Condition, measurements, flaws, what is included. 10 to 4000 characters.')}"></div>
+                    </div>
+
+                    <div th:replace="~{fragments/forms :: numberField('price', 'Price in euros', '0.01', '99999.99', '0.01', true, 'Between 0.01 and 99999.99.')}"></div>
+                    <div th:replace="~{fragments/forms :: select('condition', 'Condition', ${conditionOptions}, true, 'Choose a condition', null)}"></div>
+
+                    <div class="field field--wide is-required" th:classappend="${#fields.hasErrors('categoryId') ? 'has-error' : ''}">
+                        <label class="label" for="categoryId">Category</label>
+                        <select class="select" id="categoryId" required aria-describedby="categoryId-help"
+                                th:field="*{categoryId}"
+                                th:attr="aria-invalid=${#fields.hasErrors('categoryId') ? 'true' : 'false'}">
+                            <option value="">Choose a category</option>
+                            <optgroup label="Group" th:each="g : ${categoryGroups}" th:label="${g.label}">
+                                <option value="1" th:each="o : ${g.options}" th:value="${o.id}" th:text="${o.label}">Shoes</option>
+                            </optgroup>
+                        </select>
+                        <div th:replace="~{fragments/forms :: fieldHelp('categoryId', 'Pick the most specific category.')}"></div>
+                    </div>
+
+                    <div th:replace="~{fragments/forms :: textField('brand', 'Brand', 'text', false, 'Optional.')}"></div>
+                    <div th:replace="~{fragments/forms :: textField('size', 'Size', 'text', false, 'Optional, for example M, 42 or 28 inch.')}"></div>
+                    <div th:replace="~{fragments/forms :: textField('color', 'Color', 'text', false, 'Optional.')}"></div>
+                    <div th:replace="~{fragments/forms :: textField('city', 'City', 'text', true, 'Where the item is.')}"></div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button class="btn btn--primary btn--lg" type="submit" th:text="${editing} ? 'Save changes' : 'Publish listing'">Publish listing</button>
+                <a class="btn btn--ghost btn--lg" href="/listings" th:href="${editing} ? @{/listings/{id}(id=${listing.id})} : @{/listings}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

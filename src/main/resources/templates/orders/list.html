@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Orders', '/css/orders.css')}">
+    <meta charset="utf-8">
+    <title>Orders | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <h1>Orders</h1>
+                <p th:text="${sales} ? 'Items other members bought from you.' : 'Items you bought from other members.'">Items you bought from other members.</p>
+            </div>
+        </div>
+
+        <nav class="order-tabs" aria-label="Purchases or sales">
+            <ul class="order-tabs__list">
+                <li>
+                    <a class="order-tabs__link" href="/orders?tab=purchases" th:href="@{/orders(tab='purchases')}"
+                       th:classappend="${!sales} ? 'is-active'" th:attr="aria-current=${!sales} ? 'page'">
+                        Purchases
+                        <span class="order-tabs__count" th:if="${openPurchases > 0}" th:text="${openPurchases}"
+                              th:title="${openPurchases + ' open'}">2</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="order-tabs__link" href="/orders?tab=sales" th:href="@{/orders(tab='sales')}"
+                       th:classappend="${sales} ? 'is-active'" th:attr="aria-current=${sales} ? 'page'">
+                        Sales
+                        <span class="order-tabs__count" th:if="${openSales > 0}" th:text="${openSales}"
+                              th:title="${openSales + ' open'}">1</span>
+                    </a>
+                </li>
+            </ul>
+
+            <form class="order-filter" action="/orders" method="get" th:action="@{/orders}">
+                <input type="hidden" name="tab" value="purchases" th:value="${tab}">
+                <label class="label" for="status-filter">Status</label>
+                <select class="select" id="status-filter" name="status" data-auto-submit>
+                    <option value="">All statuses</option>
+                    <option th:each="s : ${statuses}" th:value="${s.name()}" th:selected="${filter == s}"
+                            th:text="#{${'orderStatus.' + s.name()}}">Paid</option>
+                </select>
+                <button class="btn btn--secondary btn--sm" type="submit">Filter</button>
+            </form>
+        </nav>
+
+        <p class="order-count" th:unless="${orders.empty}">
+            <span th:text="${orders.totalElements}">3</span>
+            <span th:text="${orders.totalElements == 1} ? 'order' : 'orders'">orders</span>
+            <span th:if="${filter != null}" th:text="${'with status ' + #strings.toLowerCase(filter.name())}"></span>
+        </p>
+
+        <ol class="order-list" th:unless="${orders.empty}">
+            <li class="order-row" th:each="o : ${orders.content}" th:with="other=${sales ? o.buyer : o.listing.seller}">
+                <img class="order-row__thumb" src="/img/placeholder-photo.svg" width="64" height="80" alt=""
+                     th:src="${o.listing.firstPhotoUrl != null} ? @{${o.listing.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                <div class="order-row__main">
+                    <h2 class="order-row__title">
+                        <a class="order-row__link" href="/orders/1" th:href="@{/orders/{id}(id=${o.id})}"
+                           th:text="${o.listing.title}">Listing title</a>
+                    </h2>
+                    <p class="order-row__meta">
+                        <span th:text="${sales} ? 'Bought by' : 'Sold by'">Sold by</span>
+                        <span class="order-row__who" th:text="${other.username}">ausra_k</span>
+                        <span aria-hidden="true">/</span>
+                        Order <span th:text="${'#' + o.id}">#5001</span>
+                        <span aria-hidden="true">/</span>
+                        <time datetime="2026-01-01" th:datetime="${#temporals.format(o.createdAt, 'yyyy-MM-dd')}"
+                              th:text="${#temporals.format(o.createdAt, 'd MMM yyyy')}">1 Jan 2026</time>
+                    </p>
+                </div>
+                <span class="badge order-row__status" th:classappend="${'badge--' + #strings.toLowerCase(o.status.name())}"
+                      th:text="#{${'orderStatus.' + o.status.name()}}">Paid</span>
+                <p class="order-row__price price" th:text="'€' + ${#numbers.formatDecimal(o.price, 1, 'COMMA', 2, 'POINT')}">€24.50</p>
+            </li>
+        </ol>
+
+        <div class="empty-state" th:if="${orders.empty}">
+            <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <th:block th:if="${filter != null}">
+                <h2 class="empty-state__title">No orders with this status</h2>
+                <p>Choose another status or show all of them.</p>
+                <a class="btn btn--secondary" href="/orders" th:href="@{/orders(tab=${tab})}">Show all statuses</a>
+            </th:block>
+            <th:block th:if="${filter == null and !sales}">
+                <h2 class="empty-state__title">You have not bought anything yet</h2>
+                <p>When you buy an item, you can follow the parcel and release the payment from here.</p>
+                <a class="btn btn--primary" href="/listings" th:href="@{/listings}">Browse listings</a>
+            </th:block>
+            <th:block th:if="${filter == null and sales}">
+                <h2 class="empty-state__title">No sales yet</h2>
+                <p>When someone buys one of your items, it shows up here with the address to ship it to.</p>
+                <a class="btn btn--primary" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+            </th:block>
+        </div>
+
+        <div th:replace="~{listings/fragments :: pagination(${pageWindow}, ${orders.number + 1}, ${orders.totalPages}, ${pageBase})}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

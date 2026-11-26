@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Buy and sell second-hand', '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>Buy and sell second-hand | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:if="${param.logout != null}">
+        <p class="alert alert--info" role="status">You have been logged out.</p>
+    </div>
+
+    <section class="hero" aria-labelledby="hero-title">
+        <div class="container hero__grid">
+            <div>
+                <h1 class="hero__title" id="hero-title">Find it second-hand. <span class="nowrap">Pay safely.</span></h1>
+                <p class="lead hero__lead">Rehand is a marketplace for pre-loved things, with offers, a built-in wallet and chat with every seller.</p>
+                <form class="hero__search" role="search" action="/listings" th:action="@{/listings}" method="get">
+                    <label class="visually-hidden" for="hero-q">Search listings</label>
+                    <input class="input" id="hero-q" type="search" name="q" placeholder="Search for a jacket, a bike, a lamp"
+                           maxlength="120" autocomplete="off">
+                    <button class="btn btn--secondary" type="submit">Search</button>
+                </form>
+                <div class="cluster hero__actions">
+                    <a class="btn btn--primary btn--lg" href="/listings" th:href="@{/listings}">Browse listings</a>
+                    <a class="btn btn--secondary btn--lg" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+                </div>
+            </div>
+            <img class="hero__art" src="/img/hero-art.svg" th:src="@{/img/hero-art.svg}" width="480" height="420" alt="">
+        </div>
+    </section>
+
+    <div class="container">
+
+        <section class="section" aria-labelledby="categories-title" th:if="${categories != null and !categories.isEmpty()}">
+            <div class="section__header">
+                <h2 id="categories-title">Shop by category</h2>
+            </div>
+            <ul class="category-grid">
+                <li th:each="c : ${categories}">
+                    <a class="category-tile" href="/categories/clothing-shoes" th:href="@{/categories/{slug}(slug=${c.slug})}">
+                        <span class="category-tile__name" th:text="${c.name}">Category</span>
+                        <span class="category-tile__children" th:text="${c.childNames}">Women's clothing, Men's clothing, Shoes</span>
+                        <span class="category-tile__count"
+                              th:text="${c.count + (c.count == 1 ? ' item' : ' items')}">24 items</span>
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="section" aria-labelledby="latest-title">
+            <div class="section__header">
+                <h2 id="latest-title">Latest listings</h2>
+                <a href="/listings" th:href="@{/listings}">Browse all listings</a>
+            </div>
+
+            <ul class="listing-grid" th:unless="${#lists.isEmpty(latestListings)}">
+                <li th:each="l : ${latestListings}"><article th:replace="~{fragments/listing-card :: card(${l})}"></article></li>
+            </ul>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(latestListings)}">
+                <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 7l9-4 9 4-9 4-9-4z"/>
+                    <path d="M3 7v10l9 4 9-4V7"/>
+                    <path d="M12 11v10"/>
+                </svg>
+                <h3 class="empty-state__title">No listings yet</h3>
+                <p>Be the first to list something. It takes a couple of minutes and a few photos.</p>
+                <a class="btn btn--primary" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+            </div>
+        </section>
+
+        <section class="section" aria-labelledby="trust-title">
+            <div class="trust">
+                <div>
+                    <h2 id="trust-title">Second-hand should feel safe</h2>
+                    <p class="text-muted mt-4">Every step of a purchase stays inside Rehand, so both sides know where they stand.</p>
+                </div>
+                <ul class="trust__list">
+                    <li class="trust__item">
+                        <svg class="trust__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+                            <path d="M3 7l12-4v4"/>
+                            <circle cx="16.5" cy="13.5" r="1.2"/>
+                        </svg>
+                        <div>
+                            <h3>Pay with your wallet</h3>
+                            <p>The money is held until you confirm the item arrived, then it goes to the seller.</p>
+                        </div>
+                    </li>
+                    <li class="trust__item">
+                        <svg class="trust__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20 12l-8 8-9-9V3h8l9 9z"/>
+                            <circle cx="7.5" cy="7.5" r="1.3"/>
+                        </svg>
+                        <div>
+                            <h3>Make an offer</h3>
+                            <p>Suggest a lower price. The seller can accept, decline or counter within 48 hours.</p>
+                        </div>
+                    </li>
+                    <li class="trust__item">
+                        <svg class="trust__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a8 8 0 0 1-11.6 7.1L3 20l1-5.2A8 8 0 1 1 21 12z"/>
+                        </svg>
+                        <div>
+                            <h3>Ask before you buy</h3>
+                            <p>Chat with the seller about any listing, and rate each other after the sale.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

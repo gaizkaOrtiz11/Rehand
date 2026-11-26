@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${'Offer on ' + view.listing.title}, '/css/offers.css')}">
+    <meta charset="utf-8">
+    <title>Offer | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:with="o=${view.latest},l=${view.listing}">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/offers" th:href="@{/offers(tab=${view.buyer ? 'sent' : 'received'})}"
+                       th:text="${view.buyer} ? 'Sent offers' : 'Received offers'">Received offers</a></li>
+                <li><span aria-current="page" th:text="${l.title}">Listing title</span></li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1 class="offer-title">
+                    <span>Negotiation</span>
+                    <span class="badge" th:classappend="${'badge--' + view.badge}"
+                          th:text="#{${'offerStatus.' + view.displayStatus.name()}}">Pending</span>
+                </h1>
+                <p th:text="${view.summary}">Waiting for ausra_k to answer.</p>
+            </div>
+        </div>
+
+        <p class="alert alert--info" role="status" th:if="${view.adminView}">
+            You are viewing this negotiation as an administrator.
+        </p>
+
+        <div class="offer-layout">
+
+            <div class="offer-layout__main">
+
+                <section class="panel panel--tint offer-actions" aria-labelledby="actions-title" th:if="${view.hasActions}">
+                    <h2 class="panel__title" id="actions-title">What you can do now</h2>
+
+                    <div class="offer-deadline" th:if="${view.timeLeft != null}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3 2"/>
+                        </svg>
+                        <span>
+                            <strong th:text="${view.timeLeft}">41 h</strong> left, until
+                            <time datetime="2026-01-02T10:00" th:datetime="${#temporals.format(o.expiresAt, 'yyyy-MM-dd HH:mm')}"
+                                  th:text="${#temporals.format(o.expiresAt, 'd MMM') + ' at ' + #temporals.format(o.expiresAt, 'HH:mm')}">2 Jan at 10:00</time>.
+                        </span>
+                    </div>
+
+                    <form class="offer-action" action="/checkout/1" method="get" th:if="${view.canCheckout}"
+                          th:action="@{/checkout/{id}(id=${l.id})}">
+                        <input type="hidden" name="offer" value="1" th:value="${o.id}">
+                        <p>The item is reserved for you. Pay the agreed price before the reservation ends.</p>
+                        <button class="btn btn--primary btn--lg" type="submit"
+                                th:text="'Check out at €' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">Check out at €20.00</button>
+                    </form>
+
+                    <div class="offer-answer" th:if="${view.canRespond}">
+                        <form action="/offers/1/accept" method="post" th:if="${view.canAccept}"
+                              th:action="@{/offers/{id}/accept(id=${o.id})}"
+                              th:attr="data-confirm=${view.seller} ? 'Accept this offer? The item is reserved for the buyer for 24 hours and other offers are declined.' : 'Accept this price? You then have 24 hours to check out.'">
+                            <button class="btn btn--primary" type="submit"
+                                    th:text="'Accept €' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">Accept €30.00</button>
+                        </form>
+                        <form action="/offers/1/reject" method="post" th:action="@{/offers/{id}/reject(id=${o.id})}"
+                              data-confirm="Decline this offer? The negotiation ends.">
+                            <button class="btn btn--secondary" type="submit">Decline</button>
+                        </form>
+                    </div>
+
+                    <form class="offer-action offer-action--counter" action="/offers/1/counter" method="post"
+                          th:if="${view.canCounter}" th:action="@{/offers/{id}/counter(id=${o.id})}">
+                        <label class="label" for="counter-amount">Counter with another price</label>
+                        <div class="offer-inline">
+                            <div class="money-input">
+                                <span class="money-input__prefix" aria-hidden="true">€</span>
+                                <input class="input money-input__field" id="counter-amount" name="amount" type="number"
+                                       inputmode="decimal" min="0.01" max="37.99" step="0.01" required placeholder="0.00"
+                                       aria-describedby="counter-amount-help" th:max="${view.maxCounter}">
+                            </div>
+                            <button class="btn btn--secondary" type="submit">Send counter-offer</button>
+                        </div>
+                        <p class="field-hint" id="counter-amount-help">
+                            Below the asking price of
+                            <span th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€38.00</span>
+                            and different from the current amount. The other member gets 48 hours to answer.
+                        </p>
+                    </form>
+
+                    <form class="offer-action" action="/offers/1/withdraw" method="post" th:if="${view.canWithdraw}"
+                          th:action="@{/offers/{id}/withdraw(id=${o.id})}"
+                          data-confirm="Withdraw this offer? The other member will be told.">
+                        <p>Changed your mind? You can take your offer back while it is unanswered.</p>
+                        <button class="btn btn--danger btn--sm" type="submit">Withdraw offer</button>
+                    </form>
+                </section>
+
+                <section class="panel" aria-labelledby="thread-title">
+                    <h2 class="panel__title" id="thread-title">History</h2>
+                    <ol class="thread">
+                        <li class="thread__item" th:each="e : ${view.entries}"
+                            th:classappend="${(e.mine ? 'is-mine ' : '') + (e.latest ? 'is-latest' : '')}"
+                            th:attr="aria-current=${e.latest} ? 'step'">
+                            <span class="thread__marker" aria-hidden="true" th:text="${e.makerInitials}">MB</span>
+                            <div class="thread__body">
+                                <p class="thread__line">
+                                    <strong th:text="${e.makerName}">mikel_b</strong>
+                                    <span class="thread__role" th:unless="${e.mine}" th:text="${'(' + #strings.toLowerCase(e.role) + ')'}">(buyer)</span>
+                                    <span th:text="${e.verb}">offered</span>
+                                </p>
+                                <p class="thread__amount price" th:text="'€' + ${#numbers.formatDecimal(e.offer.amount, 1, 'COMMA', 2, 'POINT')}">€30.00</p>
+                                <p class="thread__meta">
+                                    <time datetime="2026-01-01T10:00" th:datetime="${#temporals.format(e.offer.createdAt, 'yyyy-MM-dd HH:mm')}"
+                                          th:text="${#temporals.format(e.offer.createdAt, 'd MMM, HH:mm')}">1 Jan, 10:00</time>
+                                    <span class="badge" th:classappend="${'badge--' + e.badge}"
+                                          th:text="#{${'offerStatus.' + e.displayStatus.name()}}">Countered</span>
+                                </p>
+                            </div>
+                        </li>
+                    </ol>
+                </section>
+            </div>
+
+            <aside class="offer-layout__side">
+
+                <section class="panel" aria-labelledby="item-title">
+                    <h2 class="panel__title" id="item-title">Item</h2>
+                    <div class="offer-item">
+                        <img class="offer-item__thumb" src="/img/placeholder-photo.svg" width="72" height="90" alt=""
+                             th:src="${l.firstPhotoUrl != null} ? @{${l.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                        <div class="offer-item__text">
+                            <p class="offer-item__title">
+                                <a href="/listings/1" th:href="@{/listings/{id}(id=${l.id})}" th:text="${l.title}">Listing title</a>
+                            </p>
+                            <p class="offer-item__meta">
+                                <span th:text="#{${'listingStatus.' + l.status.name()}}">Available</span>
+                                <span aria-hidden="true">/</span>
+                                <span th:text="#{${'condition.' + l.condition.name()}}">Very good</span>
+                            </p>
+                        </div>
+                    </div>
+                    <dl class="deal-lines">
+                        <div>
+                            <dt>Asking price</dt>
+                            <dd th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€38.00</dd>
+                        </div>
+                        <div class="deal-lines__total">
+                            <dt th:text="${view.displayStatus.name() == 'ACCEPTED'} ? 'Agreed price' : 'Latest offer'">Latest offer</dt>
+                            <dd class="price" th:text="'€' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">€30.00</dd>
+                        </div>
+                    </dl>
+                    <a class="offer-order-link" href="/orders/1" th:if="${view.showOrderLink}"
+                       th:href="@{/orders/{id}(id=${view.orderId})}">See the order</a>
+                </section>
+
+                <section class="panel" aria-labelledby="people-title">
+                    <h2 class="panel__title" id="people-title" th:text="${view.adminView} ? 'Buyer and seller' : ${view.counterpartRole}">Seller</h2>
+                    <div class="person" th:if="${!view.adminView}">
+                        <img class="person__avatar" src="/img/placeholder-photo.svg" width="48" height="48" alt=""
+                             th:if="${view.counterpart.avatarPath != null}" th:src="@{'/uploads/' + ${view.counterpart.avatarPath}}">
+                        <span class="person__avatar person__avatar--initials" aria-hidden="true"
+                              th:if="${view.counterpart.avatarPath == null}" th:text="${view.counterpartInitials}">AK</span>
+                        <div>
+                            <a class="person__name" href="/users/2" th:href="@{/users/{id}(id=${view.counterpart.id})}"
+                               th:text="${view.counterpart.username}">ausra_k</a>
+                            <p class="person__meta" th:if="${view.counterpart.city != null}" th:text="${view.counterpart.city}">Kaunas</p>
+                        </div>
+                    </div>
+                    <dl class="meta-list" th:if="${view.adminView}">
+                        <dt>Buyer</dt>
+                        <dd><a href="/users/3" th:href="@{/users/{id}(id=${o.buyer.id})}" th:text="${o.buyer.username}">mikel_b</a></dd>
+                        <dt>Seller</dt>
+                        <dd><a href="/users/2" th:href="@{/users/{id}(id=${o.seller.id})}" th:text="${o.seller.username}">ausra_k</a></dd>
+                    </dl>
+                </section>
+
+                <p class="offer-rules">
+                    Offers stay open for 48 hours. Once an offer is accepted, the item is reserved and the buyer has
+                    24 hours to check out at that price.
+                </p>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

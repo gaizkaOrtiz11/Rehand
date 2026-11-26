@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Create an account', '/css/account.css')}">
+    <meta charset="utf-8">
+    <title>Create an account | Rehand</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+        <div class="auth">
+
+            <section aria-labelledby="register-title">
+                <div class="page-header">
+                    <div>
+                        <h1 id="register-title">Create your account</h1>
+                        <p>It takes a minute. A wallet is created together with your account.</p>
+                    </div>
+                </div>
+
+                <form class="form panel panel--raised" action="/register" th:action="@{/register}"
+                      th:object="${registerForm}" method="post">
+                    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                    <div th:replace="~{profile/fields :: textInput('email', 'Email address', 'email', 'email', true, null, 255, 'You log in with it. Other members never see it.')}"></div>
+
+                    <div class="field is-required" th:classappend="${#fields.hasErrors('username') ? 'has-error' : ''}">
+                        <label class="label" for="username">Username</label>
+                        <input class="input" type="text" id="username" th:field="*{username}" required
+                               minlength="3" maxlength="40" pattern="[A-Za-z0-9._\-]{3,40}" autocomplete="username"
+                               title="3 to 40 letters, digits, dots, underscores or hyphens"
+                               th:attr="aria-describedby='username-help',aria-invalid=${#fields.hasErrors('username') ? 'true' : 'false'}">
+                        <div th:replace="~{fragments/forms :: fieldHelp('username', 'Shown on your listings and reviews. Letters, digits, dots, underscores and hyphens, 3 to 40 characters.')}"></div>
+                    </div>
+
+                    <div th:replace="~{profile/fields :: newPasswordInput('password', 'Password', null)}"></div>
+                    <ul class="password-rules" id="password-rules" data-password-rules data-for="password" aria-label="Password rules">
+                        <li data-rule="length">At least 8 characters</li>
+                        <li data-rule="letter">At least one letter</li>
+                        <li data-rule="digit">At least one digit</li>
+                    </ul>
+                    <div th:replace="~{profile/fields :: passwordInput('confirmPassword', 'Repeat the password', 'new-password', null)}"></div>
+                    <div th:replace="~{profile/fields :: textInput('city', 'City', 'text', 'address-level2', false, null, 80, 'Optional. Helps buyers find items close to them.')}"></div>
+
+                    <div class="field is-required" th:classappend="${#fields.hasErrors('acceptTerms') ? 'has-error' : ''}">
+                        <label class="checkbox" for="acceptTerms">
+                            <input type="checkbox" id="acceptTerms" name="acceptTerms" th:field="*{acceptTerms}" required
+                                   aria-describedby="acceptTerms-help">
+                            <span>I will list items honestly, treat other members with respect and understand that payments on Rehand are simulated.</span>
+                        </label>
+                        <div th:replace="~{fragments/forms :: fieldHelp('acceptTerms', null)}"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn--primary btn--lg" type="submit">Create account</button>
+                    </div>
+                </form>
+
+                <p class="auth__note">Already have an account? <a href="/login" th:href="@{/login}">Log in</a></p>
+            </section>
+
+            <aside class="auth__aside" aria-labelledby="perks-title">
+                <h2 id="perks-title">One account, the whole marketplace</h2>
+                <p>Buy and sell with the same login. Everything stays inside Rehand.</p>
+                <ul class="perks">
+                    <li class="perk">
+                        <span class="perk__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+                                <path d="M3 7l12-4v4"/>
+                                <circle cx="16.5" cy="13.5" r="1.2"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="perk__title">A wallet of your own</h3>
+                            <p>Pay sellers and get paid without leaving the site. The money is simulated.</p>
+                        </div>
+                    </li>
+                    <li class="perk">
+                        <span class="perk__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 12V4h8l10 10-8 8L3 12z"/>
+                                <circle cx="7.5" cy="8.5" r="1.2"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="perk__title">Offers and counter-offers</h3>
+                            <p>Suggest a lower price and let the seller accept, refuse or answer with another number.</p>
+                        </div>
+                    </li>
+                    <li class="perk">
+                        <span class="perk__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="perk__title">Chat with every seller</h3>
+                            <p>Ask about size, condition or pickup before you decide to buy.</p>
+                        </div>
+                    </li>
+                </ul>
+            </aside>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/account.js" th:src="@{/js/account.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${detail.listing.title}, '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>Listing | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:with="l=${detail.listing}">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/" th:href="@{/}">Home</a></li>
+                <li><a href="/listings" th:href="@{/listings}">Listings</a></li>
+                <li th:each="crumb : ${detail.breadcrumb}">
+                    <a href="/listings" th:href="@{/categories/{slug}(slug=${crumb[1]})}" th:text="${crumb[0]}">Category</a>
+                </li>
+                <li><span aria-current="page" th:text="${l.title}">Listing title</span></li>
+            </ol>
+        </nav>
+
+        <p class="alert alert--warning status-note" role="status" th:if="${l.status.name() == 'HIDDEN'}">
+            This listing is hidden. Only you and the administrators can see it, and it does not appear in search.
+        </p>
+        <p class="alert alert--warning status-note" role="status" th:if="${l.status.name() == 'RESERVED'}">
+            <th:block th:text="${offerPanel.accepted} ? 'This item is reserved for you. Check out before the reservation ends.' : 'This item is reserved for a buyer. It may become available again.'">This item is reserved for a buyer. It may become available again.</th:block>
+        </p>
+        <p class="alert alert--info status-note" role="status" th:if="${l.status.name() == 'SOLD'}">
+            This item has been sold.
+        </p>
+        <p class="alert alert--error status-note" role="status" th:if="${l.status.name() == 'REMOVED'}">
+            This listing was deleted. Only administrators can see it.
+        </p>
+
+        <div class="detail">
+
+            <div class="detail__gallery">
+                <div class="gallery" th:classappend="${(l.photos.size() <= 1 ? 'gallery--single ' : '') + (l.status.name() == 'SOLD' ? 'is-sold' : '')}">
+                    <input class="gallery__radio visually-hidden" type="radio" name="photo" id="photo-1" checked
+                           aria-label="Show photo 1" th:if="${l.photos.size() > 1}"
+                           th:each="p, st : ${l.photos}" th:id="${'photo-' + st.count}" th:checked="${st.first}"
+                           th:attr="aria-label=${'Show photo ' + st.count}">
+
+                    <figure class="gallery__stage">
+                        <img class="gallery__slide" src="/img/placeholder-photo.svg" width="800" height="896"
+                             alt="Photo of the item" th:if="${l.photos.isEmpty()}"
+                             th:src="@{/img/placeholder-photo.svg}" th:alt="${'No photo yet for ' + l.title}">
+                        <img class="gallery__slide" src="/img/placeholder-photo.svg" width="800" height="896"
+                             alt="Photo of the item" th:each="p, st : ${l.photos}"
+                             th:src="@{${p.url}}"
+                             th:alt="${l.title + ', photo ' + st.count + ' of ' + l.photos.size()}">
+                    </figure>
+
+                    <div class="gallery__thumbs" th:if="${l.photos.size() > 1}">
+                        <label class="gallery__thumb" for="photo-1" th:each="p, st : ${l.photos}"
+                               th:for="${'photo-' + st.count}">
+                            <img src="/img/placeholder-photo.svg" width="96" height="96" alt="" loading="lazy"
+                                 th:src="@{${p.url}}">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail__buy">
+                <div class="panel panel--raised buybox">
+                    <div class="buybox__badges">
+                        <span class="badge" th:classappend="${'badge--' + l.conditionTone}"
+                              th:text="#{${'condition.' + l.condition.name()}}">Very good</span>
+                        <span class="badge" th:if="${l.status.name() != 'ACTIVE'}"
+                              th:classappend="${'badge--' + #strings.toLowerCase(l.status.name())}"
+                              th:text="#{${'listingStatus.' + l.status.name()}}">Sold</span>
+                    </div>
+
+                    <h1 class="buybox__title" th:text="${l.title}">Listing title</h1>
+
+                    <p class="buybox__price price" th:classappend="${l.status.name() == 'SOLD'} ? 'is-sold'"
+                       th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€24.50</p>
+
+                    <dl class="facts">
+                        <div th:if="${l.brand != null}">
+                            <dt>Brand</dt>
+                            <dd th:text="${l.brand}">Nike</dd>
+                        </div>
+                        <div th:if="${l.itemSize != null}">
+                            <dt>Size</dt>
+                            <dd th:text="${l.itemSize}">M</dd>
+                        </div>
+                        <div th:if="${l.color != null}">
+                            <dt>Color</dt>
+                            <dd th:text="${l.color}">Green</dd>
+                        </div>
+                        <div>
+                            <dt>Condition</dt>
+                            <dd th:text="#{${'condition.' + l.condition.name()}}">Very good</dd>
+                        </div>
+                        <div>
+                            <dt>Location</dt>
+                            <dd th:text="${l.city}">Kaunas</dd>
+                        </div>
+                        <div>
+                            <dt>Category</dt>
+                            <dd>
+                                <a href="/listings" th:href="@{/categories/{slug}(slug=${l.category.slug})}"
+                                   th:text="${l.category.name}">Shoes</a>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Listed</dt>
+                            <dd>
+                                <time datetime="2026-01-01" th:datetime="${#temporals.format(l.createdAt, 'yyyy-MM-dd')}"
+                                      th:text="${#temporals.format(l.createdAt, 'd MMM yyyy')}">1 Jan 2026</time>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Views</dt>
+                            <dd th:text="${detail.views}">12</dd>
+                        </div>
+                    </dl>
+
+                    <section aria-labelledby="seller-title">
+                        <h2 class="label mb-4" id="seller-title">Seller</h2>
+                        <div class="seller-card">
+                            <img class="avatar avatar--md" src="/img/placeholder-photo.svg" width="56" height="56" alt=""
+                                 th:if="${l.seller.avatarPath != null}" th:src="@{'/uploads/' + ${l.seller.avatarPath}}">
+                            <span class="avatar avatar--md avatar--initials" aria-hidden="true"
+                                  th:if="${l.seller.avatarPath == null}" th:text="${detail.sellerInitials}">AK</span>
+                            <div>
+                                <p class="seller-card__name">
+                                    <a class="seller-card__link" href="/users/1" th:href="@{/users/{id}(id=${l.seller.id})}"
+                                       th:text="${l.seller.username}">ausra_k</a>
+                                </p>
+                                <p class="seller-card__meta">
+                                    Member since
+                                    <time datetime="2026-01" th:datetime="${#temporals.format(l.seller.createdAt, 'yyyy-MM')}"
+                                          th:text="${#temporals.format(l.seller.createdAt, 'MMM yyyy')}">Jan 2026</time>
+                                </p>
+                                <p class="seller-card__meta"
+                                   th:text="${detail.sellerActiveCount + (detail.sellerActiveCount == 1 ? ' item' : ' items') + ' for sale'}">3 items for sale</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Buy now (orders step) and offers (offers step). -->
+                    <div class="stack--sm" th:if="${l.status.name() == 'ACTIVE'}">
+                        <form action="/checkout/1" method="get" sec:authorize="isAuthenticated()"
+                              th:unless="${detail.owner}" th:action="@{/checkout/{id}(id=${l.id})}">
+                            <button class="btn btn--primary btn--lg btn--block" type="submit">Buy now</button>
+                        </form>
+                        <p class="text-muted" th:if="${detail.owner}">This is your listing. Buyers see a Buy now button here.</p>
+                        <a class="btn btn--primary btn--lg btn--block" href="/login" sec:authorize="isAnonymous()"
+                           th:href="@{/login}">Log in to buy</a>
+                    </div>
+
+                    <form class="offer-make" action="/listings/1/offers" method="post" th:if="${offerPanel.canMakeOffer}"
+                          th:action="@{/listings/{id}/offers(id=${l.id})}">
+                        <label class="label" for="offer-amount">Make an offer</label>
+                        <div class="offer-make__row">
+                            <div class="money-input">
+                                <span class="money-input__prefix" aria-hidden="true">€</span>
+                                <input class="input money-input__field" id="offer-amount" name="amount" type="number"
+                                       inputmode="decimal" min="0.01" max="23.99" step="0.01" required
+                                       placeholder="0.00" aria-describedby="offer-amount-help"
+                                       th:max="${offerPanel.maxAmount}">
+                            </div>
+                            <button class="btn btn--secondary" type="submit">Send offer</button>
+                        </div>
+                        <p class="field-hint" id="offer-amount-help">
+                            Asking <strong th:text="'€' + ${#numbers.formatDecimal(l.price, 1, 'COMMA', 2, 'POINT')}">€24.00</strong>.
+                            Offer less and the seller has 48 hours to accept, decline or counter.
+                        </p>
+                    </form>
+
+                    <section class="offer-card" aria-labelledby="offer-card-title" th:if="${offerPanel.hasNegotiation}"
+                             th:with="o=${offerPanel.offer}"
+                             th:classappend="${offerPanel.accepted} ? 'offer-card--accepted' : (${offerPanel.counterForMe} ? 'offer-card--turn' : '')">
+                        <div class="offer-card__head">
+                            <h2 class="offer-card__title" id="offer-card-title"
+                                th:text="${offerPanel.accepted} ? 'Your offer was accepted' : (${offerPanel.counterForMe} ? 'The seller countered' : 'Your offer')">Your offer</h2>
+                            <span class="badge" th:classappend="${'badge--' + #strings.toLowerCase(o.status.name())}"
+                                  th:text="#{${'offerStatus.' + o.status.name()}}">Pending</span>
+                        </div>
+                        <p class="offer-card__amount price" th:text="'€' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">€20.00</p>
+                        <p class="offer-card__meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 7v5l3 2"/>
+                            </svg>
+                            <span th:if="${offerPanel.waitingForSeller}">Waiting for the seller, <span th:text="${offerPanel.timeLeft}">41 h</span> left to answer.</span>
+                            <span th:if="${offerPanel.counterForMe}">Your turn. <span th:text="${offerPanel.timeLeft}">41 h</span> left to answer.</span>
+                            <span th:if="${offerPanel.accepted}">Reserved for you until
+                                <time datetime="2026-01-02T10:00" th:datetime="${#temporals.format(o.expiresAt, 'yyyy-MM-dd HH:mm')}"
+                                      th:text="${#temporals.format(o.expiresAt, 'd MMM, HH:mm')}">2 Jan, 10:00</time>.</span>
+                        </p>
+
+                        <form action="/checkout/1" method="get" th:if="${offerPanel.accepted}"
+                              th:action="@{/checkout/{id}(id=${l.id})}">
+                            <input type="hidden" name="offer" value="1" th:value="${o.id}">
+                            <button class="btn btn--primary btn--lg btn--block" type="submit"
+                                    th:text="'Check out at €' + ${#numbers.formatDecimal(o.amount, 1, 'COMMA', 2, 'POINT')}">Check out at €20.00</button>
+                        </form>
+
+                        <div class="offer-card__actions" th:if="${offerPanel.counterForMe}">
+                            <form action="/offers/1/accept" method="post" th:action="@{/offers/{id}/accept(id=${o.id})}">
+                                <button class="btn btn--primary btn--sm" type="submit">Accept</button>
+                            </form>
+                            <form action="/offers/1/reject" method="post" th:action="@{/offers/{id}/reject(id=${o.id})}">
+                                <button class="btn btn--secondary btn--sm" type="submit">Decline</button>
+                            </form>
+                        </div>
+                        <form class="offer-counter" action="/offers/1/counter" method="post" th:if="${offerPanel.counterForMe}"
+                              th:action="@{/offers/{id}/counter(id=${o.id})}">
+                            <label class="label" for="counter-amount">Or counter with</label>
+                            <div class="offer-make__row">
+                                <div class="money-input">
+                                    <span class="money-input__prefix" aria-hidden="true">€</span>
+                                    <input class="input money-input__field" id="counter-amount" name="amount" type="number"
+                                           inputmode="decimal" min="0.01" max="23.99" step="0.01" required placeholder="0.00"
+                                           th:max="${offerPanel.maxCounter}">
+                                </div>
+                                <button class="btn btn--secondary btn--sm" type="submit">Counter</button>
+                            </div>
+                        </form>
+
+                        <form action="/offers/1/withdraw" method="post" th:if="${offerPanel.waitingForSeller}"
+                              th:action="@{/offers/{id}/withdraw(id=${o.id})}"
+                              data-confirm="Withdraw your offer? The seller will be told.">
+                            <button class="link-button offer-card__withdraw" type="submit">Withdraw offer</button>
+                        </form>
+
+                        <a class="offer-card__link" href="/offers/1" th:href="@{/offers/{id}(id=${o.id})}">See the whole negotiation</a>
+                    </section>
+
+                    <a class="offer-count" href="/offers?tab=received" th:if="${offerPanel.owner and offerPanel.openOfferCount > 0}"
+                       th:href="@{/offers(tab='received',status='open')}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/>
+                            <circle cx="7.5" cy="7.5" r="1.5"/>
+                        </svg>
+                        <span th:text="${offerPanel.openOfferCount + (offerPanel.openOfferCount == 1 ? ' open offer' : ' open offers')}">2 open offers</span>
+                        <span class="offer-count__go">Review</span>
+                    </a>
+
+                    <p class="assure">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        <span>You pay from your Rehand wallet. The seller is paid after you confirm that the item arrived.</span>
+                    </p>
+                </div>
+
+                <section class="panel panel--tint manage" aria-labelledby="manage-title" th:if="${detail.canManage}">
+                    <h2 class="panel__title" id="manage-title">Manage this listing</h2>
+                    <div class="cluster">
+                        <a class="btn btn--secondary btn--sm" href="/listings/1/edit"
+                           th:if="${l.editable}" th:href="@{/listings/{id}/edit(id=${l.id})}">Edit</a>
+                        <form action="/listings/1/status" method="post" th:if="${l.status.name() == 'ACTIVE'}"
+                              th:action="@{/listings/{id}/status(id=${l.id})}">
+                            <input type="hidden" name="status" value="HIDDEN">
+                            <button class="btn btn--secondary btn--sm" type="submit">Hide listing</button>
+                        </form>
+                        <form action="/listings/1/status" method="post" th:if="${l.status.name() == 'HIDDEN'}"
+                              th:action="@{/listings/{id}/status(id=${l.id})}">
+                            <input type="hidden" name="status" value="ACTIVE">
+                            <button class="btn btn--secondary btn--sm" type="submit">Make available</button>
+                        </form>
+                        <form action="/listings/1/delete" method="post"
+                              th:if="${l.status.name() == 'ACTIVE' or l.status.name() == 'HIDDEN'}"
+                              th:action="@{/listings/{id}/delete(id=${l.id})}"
+                              data-confirm="Delete this listing? It will disappear for good.">
+                            <button class="btn btn--danger btn--sm" type="submit">Delete listing</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <section class="detail__about" aria-labelledby="about-title">
+                <h2 id="about-title">About this item</h2>
+                <p class="prose" th:text="${l.description}">Description of the item.</p>
+            </section>
+        </div>
+
+        <section class="section" aria-labelledby="related-title" th:if="${!detail.related.isEmpty()}">
+            <div class="section__header">
+                <h2 id="related-title">More in <span th:text="${l.category.name}">this category</span></h2>
+                <a href="/listings" th:href="@{/categories/{slug}(slug=${l.category.slug})}">See all</a>
+            </div>
+            <ul class="listing-grid">
+                <li th:each="r : ${detail.related}"><article th:replace="~{fragments/listing-card :: card(${r})}"></article></li>
+            </ul>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

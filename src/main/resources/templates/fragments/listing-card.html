@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  LISTING CARD. One fragment, used on the home page, search results, profiles and favorites.
+
+  Usage inside a list:
+  <ul class="listing-grid">
+    <li th:each="l : ${listings}" th:replace="~{fragments/listing-card :: card(${l})}"></li>
+  </ul>
+  or, when the wrapper <li> is written by hand:
+  <ul class="listing-grid">
+    <li th:each="l : ${listings}"><article th:replace="~{fragments/listing-card :: card(${l})}"></article></li>
+  </ul>
+
+  The parameter is any object (entity or DTO) exposing these properties:
+    id            Long
+    title         String
+    price         BigDecimal
+    condition     ItemCondition enum   (label from messages.properties: condition.*)
+    status        ListingStatus enum   (shown as a badge unless ACTIVE)
+    firstPhotoPath String or null      path relative to the upload folder, for example "listings/12/a1b2.jpg"
+                                       (the card links to /uploads/ + path, null shows the placeholder image)
+    city          String
+    createdAt     LocalDateTime
+  Photo box ratio is 4:5 (see .listing-card__media in app.css). Prices are shown in euros.
+-->
+<body>
+
+<article class="listing-card" th:fragment="card(listing)"
+         th:classappend="${listing.status != null and listing.status.name() == 'SOLD'} ? 'is-sold'">
+    <figure class="listing-card__media">
+        <img src="/img/placeholder-photo.svg" width="400" height="500" loading="lazy"
+             alt="Photo of the item"
+             th:src="${listing.firstPhotoUrl != null} ? @{${listing.firstPhotoUrl}} : @{/img/placeholder-photo.svg}"
+             th:alt="${listing.firstPhotoPath != null} ? ${'Photo of ' + listing.title} : ${'No photo yet for ' + listing.title}">
+    </figure>
+    <div class="listing-card__body">
+        <p class="listing-card__price price"
+           th:text="'€' + ${#numbers.formatDecimal(listing.price, 1, 'COMMA', 2, 'POINT')}">€24.50</p>
+        <h3 class="listing-card__title">
+            <a class="listing-card__link" href="/listings/1" th:href="@{/listings/{id}(id=${listing.id})}"
+               th:title="${listing.title}" th:text="${listing.title}">Listing title</a>
+        </h3>
+        <p class="listing-card__meta">
+            <span th:if="${listing.condition != null}"
+                  th:text="#{${'condition.' + listing.condition}}">Very good</span>
+            <span th:if="${listing.city != null}" th:text="${listing.city}">Kaunas</span>
+            <time datetime="2026-01-01" th:if="${listing.createdAt != null}"
+                  th:datetime="${#temporals.format(listing.createdAt, 'yyyy-MM-dd')}"
+                  th:text="${#temporals.format(listing.createdAt, 'd MMM yyyy')}">1 Jan 2026</time>
+            <span class="badge" th:if="${listing.status != null and listing.status.name() != 'ACTIVE'}"
+                  th:classappend="${'badge--' + #strings.toLowerCase(listing.status.name())}"
+                  th:text="#{${'listingStatus.' + listing.status}}">Sold</span>
+        </p>
+    </div>
+</article>
+
+</body>
+</html>

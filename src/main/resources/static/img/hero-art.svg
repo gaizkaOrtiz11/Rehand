@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 420" width="480" height="420" role="img" aria-labelledby="hero-title">
+  <title id="hero-title">A stack of books, a lamp and a price tag on a shelf</title>
+  <rect width="480" height="420" rx="16" fill="#d9eadf"/>
+  <circle cx="372" cy="110" r="74" fill="#bfe3d3"/>
+  <!-- shelf -->
+  <rect x="40" y="318" width="400" height="14" rx="4" fill="#16201c"/>
+  <rect x="64" y="332" width="12" height="52" fill="#16201c"/>
+  <rect x="404" y="332" width="12" height="52" fill="#16201c"/>
+  <!-- books -->
+  <rect x="70" y="274" width="132" height="44" rx="4" fill="#0d6a4f"/>
+  <rect x="82" y="290" width="60" height="5" fill="#bfe3d3"/>
+  <rect x="86" y="230" width="110" height="44" rx="4" fill="#f4f6f3"/>
+  <rect x="98" y="246" width="48" height="5" fill="#7f8d85"/>
+  <rect x="78" y="190" width="120" height="40" rx="4" fill="#16201c"/>
+  <rect x="90" y="204" width="54" height="5" fill="#bfe3d3"/>
+  <!-- lamp -->
+  <rect x="316" y="296" width="64" height="22" rx="6" fill="#16201c"/>
+  <rect x="344" y="190" width="8" height="106" fill="#16201c"/>
+  <path d="M300 196 L332 126 H364 L396 196 Z" fill="#0d6a4f"/>
+  <path d="M312 196 L336 142 H360 L384 196 Z" fill="#14825f"/>
+  <!-- price tag -->
+  <line x1="238" y1="96" x2="238" y2="136" stroke="#16201c" stroke-width="4"/>
+  <path d="M206 150 L238 132 L270 150 V222 a10 10 0 0 1 -10 10 H216 a10 10 0 0 1 -10 -10 Z" fill="#ffffff" stroke="#16201c" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="238" cy="156" r="6" fill="#d9eadf" stroke="#16201c" stroke-width="3"/>
+  <rect x="220" y="180" width="36" height="6" rx="3" fill="#0d6a4f"/>
+  <rect x="226" y="196" width="24" height="6" rx="3" fill="#b9c6be"/>
+</svg>

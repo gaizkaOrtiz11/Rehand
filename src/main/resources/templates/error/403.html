@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: head('No access')}">
+    <meta charset="utf-8">
+    <title>No access | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main id="main">
+    <div class="container container--medium">
+        <section class="error-page" aria-labelledby="error-title">
+            <p class="error-page__code">403</p>
+            <h1 id="error-title">You cannot open this page</h1>
+            <p>Your account does not have permission to see it. If you think this is a mistake, log in with a different account.</p>
+            <div class="cluster">
+                <a class="btn btn--primary" href="/" th:href="@{/}">Go to the home page</a>
+                <a class="btn btn--secondary" href="/listings" th:href="@{/listings}">Browse listings</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,619 @@
+/*
+ * Rehand: offer pages (offers/list.html, offers/detail.html). The offer panel on the listing page lives
+ * in catalog.css and the agreed-price checkout in orders.css, because those pages load those files.
+ * Loaded after app.css and uses only its tokens (the offer status badge colours, badge--pending,
+ * badge--accepted and so on, are defined with the other badges in app.css). Plain CSS3: no nesting,
+ * no @layer, no vendor prefixes.
+ *
+ * Sections: 1 Tabs and filter, 2 Offer list, 3 Negotiation layout, 4 Actions, 5 History thread,
+ * 6 Side panels, 7 Responsive, 8 Reduced motion.
+ */
+
+/* ---------- 1. Tabs and filter ---------- */
+.offer-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.offer-tabs__list {
+    display: flex;
+    gap: var(--space-5);
+}
+
+.offer-tabs__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0 var(--space-3);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.offer-tabs__link:hover {
+    color: var(--color-text);
+}
+
+.offer-tabs__link.is-active {
+    border-bottom-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.offer-tabs__count {
+    min-width: 1.5rem;
+    padding: 0 0.45rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-warning-tint);
+    color: var(--color-warning-text);
+    font-size: var(--text-xs);
+    line-height: 1.5rem;
+    text-align: center;
+}
+
+.offer-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+}
+
+.offer-filter__set {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-pill);
+}
+
+.offer-filter__option span {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+
+.offer-filter__option span:hover {
+    color: var(--color-text);
+}
+
+.offer-filter__option input:checked + span {
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-card);
+}
+
+.offer-filter__option input:focus-visible + span {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 1px;
+}
+
+.offer-count-line {
+    margin-bottom: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ---------- 2. Offer list ---------- */
+.offer-list {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.offer-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "thumb main amount"
+        "thumb state state";
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-4);
+    border-left: 4px solid transparent;
+    transition: background-color 0.15s var(--ease-out);
+}
+
+.offer-row + .offer-row {
+    border-top: 1px solid var(--color-border);
+}
+
+.offer-row:hover {
+    background: var(--color-bg);
+}
+
+.offer-row:first-child {
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+.offer-row:last-child {
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+.offer-row:only-child {
+    border-radius: var(--radius-card);
+}
+
+/* Rows that wait for the viewer's answer */
+.offer-row.is-turn {
+    border-left-color: var(--color-warning-border);
+}
+
+.offer-row__thumb {
+    grid-area: thumb;
+    width: 4rem;
+    height: 5rem;
+    object-fit: cover;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-control);
+}
+
+.offer-row__main {
+    grid-area: main;
+    min-width: 0;
+}
+
+.offer-row__title {
+    font-size: var(--text-base);
+    line-height: 1.3;
+    overflow-wrap: break-word;
+}
+
+.offer-row__link {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+/* The whole row is clickable; the link stays the only focusable element. */
+.offer-row__link::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.offer-row__link:hover {
+    color: var(--color-accent-hover);
+}
+
+.offer-row__link:focus-visible {
+    outline: none;
+}
+
+.offer-row__link:focus-visible::after {
+    outline: 3px solid var(--color-focus);
+    outline-offset: -3px;
+    border-radius: inherit;
+}
+
+.offer-row__meta {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+.offer-row__who {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.offer-row__amount {
+    grid-area: amount;
+    text-align: right;
+}
+
+.offer-row__price {
+    font-size: var(--text-lg);
+    line-height: 1.2;
+}
+
+.offer-row__by {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+.offer-row__state {
+    grid-area: state;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+}
+
+.offer-row__turn {
+    color: var(--color-warning-text);
+    font-size: var(--text-xs);
+    font-weight: 700;
+}
+
+.offer-row__wait {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+/* ---------- 3. Negotiation layout ---------- */
+.offer-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.offer-title .badge {
+    font-size: var(--text-sm);
+}
+
+.alert + .offer-layout {
+    margin-top: var(--space-5);
+}
+
+.offer-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.offer-layout__main,
+.offer-layout__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+/* ---------- 4. Actions ---------- */
+.offer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.offer-actions .panel__title {
+    margin-bottom: 0;
+}
+
+.offer-deadline {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.offer-deadline svg {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.15rem;
+    color: var(--color-accent);
+}
+
+.offer-answer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.offer-answer form {
+    margin: 0;
+}
+
+.offer-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.offer-action p {
+    font-size: var(--text-sm);
+}
+
+.offer-action--counter {
+    align-items: stretch;
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(13, 106, 79, 0.18);
+}
+
+.offer-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.offer-inline .btn {
+    flex: 0 0 auto;
+}
+
+.money-input {
+    position: relative;
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.money-input__prefix {
+    position: absolute;
+    top: 50%;
+    left: 0.85rem;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.money-input__field {
+    padding-left: 1.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 5. History thread (vertical timeline) ---------- */
+.thread {
+    display: flex;
+    flex-direction: column;
+}
+
+.thread__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    column-gap: var(--space-3);
+    padding-bottom: var(--space-5);
+}
+
+.thread__item:last-child {
+    padding-bottom: 0;
+}
+
+/* Rail between two markers */
+.thread__item::before {
+    content: "";
+    position: absolute;
+    top: 2.5rem;
+    bottom: 0;
+    left: calc(1.25rem - 1px);
+    width: 2px;
+    background: var(--color-border);
+}
+
+.thread__item:last-child::before {
+    display: none;
+}
+
+.thread__marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    font-weight: 800;
+}
+
+.thread__item.is-mine .thread__marker {
+    border-color: var(--color-accent);
+    background: var(--color-accent-tint);
+    color: var(--color-accent-hover);
+}
+
+.thread__item.is-latest .thread__marker {
+    box-shadow: 0 0 0 4px var(--color-accent-tint);
+}
+
+.thread__body {
+    min-width: 0;
+    padding: var(--space-1) 0 0;
+}
+
+.thread__item.is-latest .thread__body {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.thread__line {
+    font-size: var(--text-sm);
+}
+
+.thread__role {
+    color: var(--color-text-muted);
+}
+
+.thread__amount {
+    font-size: var(--text-xl);
+    line-height: 1.3;
+}
+
+.thread__item:not(.is-latest) .thread__amount {
+    color: var(--color-text-muted);
+}
+
+.thread__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+/* ---------- 6. Side panels ---------- */
+.offer-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.offer-item__thumb {
+    flex: 0 0 auto;
+    width: 4.5rem;
+    height: 5.625rem;
+    object-fit: cover;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-control);
+}
+
+.offer-item__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.offer-item__title {
+    font-weight: 800;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+}
+
+.offer-item__title a {
+    color: var(--color-text);
+}
+
+.offer-item__title a:hover {
+    color: var(--color-accent-hover);
+}
+
+.offer-item__meta {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.deal-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-sm);
+}
+
+.deal-lines > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.deal-lines dt {
+    color: var(--color-text-muted);
+}
+
+.deal-lines dd {
+    font-weight: 700;
+    text-align: right;
+}
+
+.deal-lines__total {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.deal-lines__total dt {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.deal-lines__total dd {
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+}
+
+.offer-order-link {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.person {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.person__avatar {
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-pill);
+    object-fit: cover;
+    background: var(--color-surface-2);
+}
+
+.person__avatar--initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-accent-tint);
+    color: var(--color-accent-hover);
+    font-size: var(--text-sm);
+    font-weight: 800;
+}
+
+.person__name {
+    color: var(--color-text);
+    font-weight: 800;
+}
+
+.person__name:hover {
+    color: var(--color-accent-hover);
+}
+
+.person__meta {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+.offer-rules {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+/* ---------- 7. Responsive ---------- */
+@media (min-width: 40em) {
+    .offer-row {
+        grid-template-columns: auto minmax(0, 1fr) 11rem 7rem;
+        grid-template-areas: "thumb main state amount";
+        gap: var(--space-4);
+    }
+
+    .offer-row__state {
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+    }
+}
+
+@media (min-width: 64em) {
+    .offer-layout {
+        grid-template-columns: minmax(0, 1fr) 20rem;
+        gap: var(--space-6);
+    }
+}
+
+/* ---------- 8. Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .offer-row,
+    .offer-filter__option span {
+        transition: none;
+    }
+}

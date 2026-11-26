@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  LAYOUT FRAGMENTS (Thymeleaf). Every page is a COMPLETE HTML5 document built like this:
+
+  <!DOCTYPE html>
+  <html lang="en">
+  <head th:replace="~{fragments/layout :: head('Page title')}"></head>
+  <body>
+    <header th:replace="~{fragments/layout :: header}"></header>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <main id="main">
+      <div class="container"> ... page content ... </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </body>
+  </html>
+
+  Rules for page authors
+  - <main> always carries id="main" (the skip link points at it).
+  - Use th:action="@{...}" on every POST form: Spring adds the hidden CSRF token that way.
+  - Flash messages: controllers add redirectAttributes.addFlashAttribute("flashSuccess" | "flashError" | "flashInfo", "text").
+    The attribute names are flash*, because Spring Boot error pages already use "error" and "message".
+  - Search form in the header is a GET form to /listings with the field q.
+  - Labels for enum values: th:text="#{${'condition.' + listing.condition}}" (see messages.properties).
+-->
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title th:text="${title} + ' | Rehand'">Rehand</title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo-mark.svg" th:href="@{/img/logo-mark.svg}">
+    <link rel="stylesheet" href="/css/app.css" th:href="@{/css/app.css}">
+    <script src="/js/app.js" th:src="@{/js/app.js}" defer></script>
+</head>
+<!-- Same as head(title) plus one extra stylesheet: <head th:replace="~{fragments/layout :: headWithCss('Title', '/css/catalog.css')}"> -->
+<head th:fragment="headWithCss(title, css)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title th:text="${title} + ' | Rehand'">Rehand</title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo-mark.svg" th:href="@{/img/logo-mark.svg}">
+    <link rel="stylesheet" href="/css/app.css" th:href="@{/css/app.css}">
+    <link rel="stylesheet" href="/css/page.css" th:href="@{${css}}">
+    <script src="/js/app.js" th:src="@{/js/app.js}" defer></script>
+</head>
+<body>
+
+<header class="site-header" th:fragment="header">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="container site-header__inner">
+        <a class="wordmark" href="/" th:href="@{/}">
+            <img src="/img/logo-mark.svg" th:src="@{/img/logo-mark.svg}" alt="" width="32" height="32">
+            <span>rehand</span>
+        </a>
+
+        <form class="site-search" role="search" action="/listings" th:action="@{/listings}" method="get">
+            <label class="visually-hidden" for="site-search-q">Search listings</label>
+            <input class="input" id="site-search-q" type="search" name="q" placeholder="Search listings"
+                   maxlength="120" autocomplete="off" th:value="${param.q != null} ? ${param.q[0]}">
+            <button class="btn btn--secondary" type="submit">Search</button>
+        </form>
+
+        <nav class="site-nav" aria-label="Main">
+            <ul class="site-nav__list">
+                <li sec:authorize="isAnonymous()">
+                    <a class="site-nav__link" href="/login" th:href="@{/login}">Log in</a>
+                </li>
+                <li sec:authorize="isAnonymous()">
+                    <a class="site-nav__link" href="/register" th:href="@{/register}">Register</a>
+                </li>
+                <li sec:authorize="hasRole('ADMIN')">
+                    <a class="site-nav__link" href="/admin" th:href="@{/admin}">Admin</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <a class="site-nav__link" href="/orders" th:href="@{/orders}">Orders</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <a class="site-nav__link" href="/offers" th:href="@{/offers}">Offers</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <a class="site-nav__link" href="/wallet" th:href="@{/wallet}">Wallet</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <a class="site-nav__link" href="/profile" th:href="@{/profile}">Profile</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <form class="site-nav__form" action="/logout" th:action="@{/logout}" method="post">
+                        <button class="link-button" type="submit">Log out</button>
+                    </form>
+                </li>
+                <li>
+                    <a class="btn btn--primary btn--sm" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div class="flash" th:fragment="flash"
+     th:if="${flashSuccess != null or flashError != null or flashInfo != null}">
+    <div class="container">
+        <p class="alert alert--success" role="status" th:if="${flashSuccess != null}" th:text="${flashSuccess}">Saved.</p>
+        <p class="alert alert--error" role="alert" th:if="${flashError != null}" th:text="${flashError}">Something went wrong.</p>
+        <p class="alert alert--info" role="status" th:if="${flashInfo != null}" th:text="${flashInfo}">Heads up.</p>
+    </div>
+</div>
+
+<footer class="site-footer" th:fragment="footer">
+    <div class="container site-footer__inner">
+        <div>
+            <p><strong>rehand</strong></p>
+            <p>A student project for Interactive Web Technologies at KTU. Payments are simulated, no real money moves.</p>
+        </div>
+        <nav aria-label="Footer">
+            <ul class="site-footer__links">
+                <li><a href="/listings" th:href="@{/listings}">Browse listings</a></li>
+                <li><a href="/listings/new" th:href="@{/listings/new}">Sell an item</a></li>
+                <li sec:authorize="isAnonymous()"><a href="/register" th:href="@{/register}">Register</a></li>
+            </ul>
+        </nav>
+        <p>&copy; <span th:text="${#temporals.year(#temporals.createNow())}">2026</span> Rehand</p>
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Checkout', '/css/orders.css')}">
+    <meta charset="utf-8">
+    <title>Checkout | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:with="l=${checkout.listing}">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/" th:href="@{/}">Home</a></li>
+                <li><a href="/listings/1" th:href="@{/listings/{id}(id=${l.id})}" th:text="${l.title}">Listing title</a></li>
+                <li><span aria-current="page">Checkout</span></li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1>Checkout</h1>
+                <p th:text="${checkout.fromOffer} ? 'Your offer was accepted. Tell the seller where to send the parcel, then pay the agreed price from your wallet.' : 'Tell the seller where to send the parcel, then pay from your Rehand wallet.'">Tell the seller where to send the parcel, then pay from your Rehand wallet.</p>
+            </div>
+        </div>
+
+        <form class="checkout" action="/checkout/1" method="post" novalidate
+              th:action="@{/checkout/{id}(id=${l.id})}" th:object="${checkoutForm}">
+            <input type="hidden" th:field="*{offerId}">
+
+            <section class="panel checkout__address" aria-labelledby="address-title">
+                <h2 class="panel__title" id="address-title">Shipping address</h2>
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div class="form-grid checkout__fields">
+                    <div class="checkout__wide" th:insert="~{fragments/forms :: textField('shipName', 'Full name', 'text', true, 'The name on the parcel.')}"></div>
+                    <div class="checkout__wide" th:insert="~{fragments/forms :: textField('shipStreet', 'Street and number', 'text', true, 'Include the flat number if there is one.')}"></div>
+                    <div th:insert="~{fragments/forms :: textField('shipCity', 'City', 'text', true, null)}"></div>
+                    <div th:insert="~{fragments/forms :: textField('shipPostalCode', 'Postal code', 'text', true, 'For example LT-44248.')}"></div>
+                </div>
+                <p class="checkout__privacy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="4" y="11" width="16" height="10" rx="2"/>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                    </svg>
+                    <span>Only the seller of this item sees the address, and only for this order.</span>
+                </p>
+            </section>
+
+            <aside class="panel panel--raised checkout__summary" aria-labelledby="summary-title">
+                <h2 class="panel__title" id="summary-title">Order summary</h2>
+
+                <div class="order-item">
+                    <img class="order-item__thumb" src="/img/placeholder-photo.svg" width="72" height="90" alt=""
+                         th:src="${l.firstPhotoUrl != null} ? @{${l.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                    <div class="order-item__text">
+                        <p class="order-item__title" th:text="${l.title}">Listing title</p>
+                        <p class="order-item__meta">Sold by <span th:text="${l.seller.username}">ausra_k</span>
+                            in <span th:text="${l.city}">Kaunas</span></p>
+                    </div>
+                </div>
+
+                <dl class="sum-lines">
+                    <div th:unless="${checkout.fromOffer}">
+                        <dt>Item</dt>
+                        <dd th:text="'€' + ${#numbers.formatDecimal(checkout.price, 1, 'COMMA', 2, 'POINT')}">€24.50</dd>
+                    </div>
+                    <div th:if="${checkout.fromOffer}">
+                        <dt>Asking price</dt>
+                        <dd><del class="price-was" th:text="'€' + ${#numbers.formatDecimal(checkout.askingPrice, 1, 'COMMA', 2, 'POINT')}">€24.50</del></dd>
+                    </div>
+                    <div th:if="${checkout.fromOffer}">
+                        <dt>Agreed price</dt>
+                        <dd th:text="'€' + ${#numbers.formatDecimal(checkout.price, 1, 'COMMA', 2, 'POINT')}">€20.00</dd>
+                    </div>
+                    <div>
+                        <dt>Shipping</dt>
+                        <dd>Included</dd>
+                    </div>
+                    <div class="sum-lines__total">
+                        <dt>Total</dt>
+                        <dd class="price" th:text="'€' + ${#numbers.formatDecimal(checkout.price, 1, 'COMMA', 2, 'POINT')}">€24.50</dd>
+                    </div>
+                </dl>
+
+                <p class="agreed-note" th:if="${checkout.fromOffer}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/>
+                        <circle cx="7.5" cy="7.5" r="1.5"/>
+                    </svg>
+                    <span>Your accepted offer saves you
+                        <strong th:text="'€' + ${#numbers.formatDecimal(checkout.saving, 1, 'COMMA', 2, 'POINT')}">€4.50</strong>.
+                        <a href="/offers/1" th:href="@{/offers/{id}(id=${checkout.offerId})}">See the negotiation</a></span>
+                </p>
+
+                <section class="wallet-box" aria-labelledby="wallet-title"
+                         th:classappend="${checkout.balanceEnough} ? 'is-ok' : 'is-short'">
+                    <div class="wallet-box__row">
+                        <h3 class="wallet-box__title" id="wallet-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 7a2 2 0 0 1 2-2h13v4"/>
+                                <path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/>
+                                <path d="M16 14h.01"/>
+                            </svg>
+                            Your wallet
+                        </h3>
+                        <p class="wallet-box__balance price" th:text="'€' + ${#numbers.formatDecimal(checkout.balance, 1, 'COMMA', 2, 'POINT')}">€75.50</p>
+                    </div>
+                    <p class="wallet-box__note" th:if="${checkout.balanceEnough}">
+                        After paying you will have
+                        <strong th:text="'€' + ${#numbers.formatDecimal(checkout.balanceAfter, 1, 'COMMA', 2, 'POINT')}">€51.00</strong> left.
+                    </p>
+                    <div th:unless="${checkout.balanceEnough}">
+                        <p class="wallet-box__note" role="status">
+                            Your balance is <strong th:text="'€' + ${#numbers.formatDecimal(checkout.missing, 1, 'COMMA', 2, 'POINT')}">€12.00</strong>
+                            short of the price. Top up and you will come straight back here.
+                        </p>
+                        <a class="btn btn--secondary btn--sm wallet-box__action" href="/wallet/top-up"
+                           th:href="@{/wallet/top-up(amount=${checkout.topUpAmount},returnTo=${checkout.returnPath})}"
+                           th:text="'Top up €' + ${#numbers.formatDecimal(checkout.topUpAmount, 1, 'COMMA', 2, 'POINT')}">Top up €12.00</a>
+                    </div>
+                </section>
+
+                <button class="btn btn--primary btn--lg btn--block" type="submit"
+                        th:text="'Pay €' + ${#numbers.formatDecimal(checkout.price, 1, 'COMMA', 2, 'POINT')}">Pay €24.50</button>
+
+                <p class="assure-note">
+                    The money stays on hold until you confirm that the item arrived. You can cancel for a full
+                    refund until the seller ships.
+                </p>
+            </aside>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

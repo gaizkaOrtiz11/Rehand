@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Withdraw money', '/css/wallet.css')}">
+    <meta charset="utf-8">
+    <title>Withdraw money | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/wallet" th:href="@{/wallet}">Wallet</a></li>
+                <li><span aria-current="page">Withdraw</span></li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1>Withdraw money</h1>
+                <p>Send part or all of your balance to a bank account.</p>
+            </div>
+        </div>
+
+        <div class="wallet-split">
+            <form class="panel panel--raised form wallet-form" action="/wallet/withdraw" method="post"
+                  th:action="@{/wallet/withdraw}" th:object="${withdrawForm}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                <p class="alert alert--warning" th:if="${balance.compareTo(minWithdraw) < 0}">
+                    Your balance is below €1.00, the smallest amount you can withdraw.
+                </p>
+
+                <fieldset class="form-section">
+                    <legend class="form-section__title">Amount</legend>
+                    <div th:replace="~{fragments/forms :: numberField('amount', 'Amount in euros', '1.00',
+                         ${#numbers.formatDecimal(balance, 1, 'NONE', 2, 'POINT')}, '0.01', true,
+                         ${'You can withdraw from €1.00 up to €' + #numbers.formatDecimal(balance, 1, 'COMMA', 2, 'POINT') + '.'})}"></div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend class="form-section__title">Bank account</legend>
+                    <p class="sim-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        <span><strong>Simulated transfer: bank details are not stored.</strong>
+                            No real money leaves Rehand. A test IBAN: LT12 1000 0111 0100 1000.</span>
+                    </p>
+
+                    <div th:replace="~{fragments/forms :: textField('accountHolder', 'Account holder', 'text', true, null)}"></div>
+
+                    <div class="field is-required" th:classappend="${#fields.hasErrors('iban')} ? 'has-error'">
+                        <label class="label" for="iban">IBAN</label>
+                        <input class="input input--mono" id="iban" type="text" autocomplete="off" spellcheck="false"
+                               autocapitalize="characters" maxlength="42" placeholder="LT12 1000 0111 0100 1000" required
+                               th:field="*{iban}" aria-describedby="iban-help">
+                        <div th:replace="~{fragments/forms :: fieldHelp('iban', 'Country code, two check digits and the account number. Spaces are fine.')}"></div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button class="btn btn--primary btn--lg" type="submit"
+                            th:disabled="${balance.compareTo(minWithdraw) < 0}">Withdraw</button>
+                    <a class="btn btn--ghost" href="/wallet" th:href="@{/wallet}">Cancel</a>
+                </div>
+            </form>
+
+            <aside class="wallet-aside" aria-labelledby="aside-title">
+                <div class="balance-mini">
+                    <h2 class="balance-mini__label" id="aside-title">Available to withdraw</h2>
+                    <p class="balance-mini__amount price" th:text="'€' + ${#numbers.formatDecimal(balance, 1, 'COMMA', 2, 'POINT')}">€150.00</p>
+                </div>
+                <ul class="aside-points">
+                    <li>Money paid for open orders is not part of your balance until the order is completed.</li>
+                    <li>Withdrawals show in your history with the type Withdrawal.</li>
+                </ul>
+            </aside>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

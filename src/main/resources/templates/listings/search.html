@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${ctx.selected != null ? ctx.selected.name : 'Browse listings'}, '/css/catalog.css')}">
+    <meta charset="utf-8">
+    <title>Browse listings | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/" th:href="@{/}">Home</a></li>
+                <li th:if="${ctx.selected == null}"><span aria-current="page">Listings</span></li>
+                <li th:if="${ctx.selected != null}"><a href="/listings" th:href="@{/listings}">Listings</a></li>
+                <li th:each="crumb, st : ${ctx.breadcrumb}">
+                    <span aria-current="page" th:if="${st.last}" th:text="${crumb.name}">Category</span>
+                    <a href="/listings" th:unless="${st.last}" th:href="@{/categories/{slug}(slug=${crumb.slug})}"
+                       th:text="${crumb.name}">Category</a>
+                </li>
+            </ol>
+        </nav>
+
+        <div class="catalog-head">
+            <h1 th:text="${ctx.selected != null} ? ${ctx.selected.name} : 'Browse listings'">Browse listings</h1>
+        </div>
+
+        <nav class="category-rail" aria-label="Categories">
+            <ul class="cluster">
+                <li th:if="${ctx.selected != null}">
+                    <a class="chip" href="/listings" th:href="@{${#strings.substringBefore(railBase, 'category=')}}">All categories</a>
+                </li>
+                <li th:each="c : ${ctx.rail}">
+                    <a class="chip" href="/listings" th:href="@{${railBase + c.slug}}"
+                       th:classappend="${ctx.selected != null and ctx.selected.id == c.id} ? 'is-active'"
+                       th:attr="aria-current=${ctx.selected != null and ctx.selected.id == c.id} ? 'true'">
+                        <span th:text="${c.name}">Shoes</span>
+                        <span class="chip__count" th:text="${c.count}">12</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="layout-sidebar">
+
+            <aside class="filters" aria-label="Filters">
+                <details class="filters__details" open>
+                    <summary class="filters__summary">
+                        <span>Filters<span th:if="${!chips.isEmpty()}" th:text="${' (' + chips.size() + ' active)'}"></span></span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 6h16"/>
+                            <path d="M7 12h10"/>
+                            <path d="M10 18h4"/>
+                        </svg>
+                    </summary>
+
+                    <form class="filters__body" method="get" action="/listings" th:action="@{/listings}">
+                        <div class="filter-group">
+                            <label class="label" for="f-q">Keywords</label>
+                            <input class="input" id="f-q" type="search" name="q" maxlength="120" autocomplete="off"
+                                   placeholder="Jacket, bike, lamp" th:value="${criteria.q}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="label" for="f-category">Category</label>
+                            <select class="select" id="f-category" name="category">
+                                <option value="">All categories</option>
+                                <optgroup label="Group" th:each="g : ${filterGroups}" th:label="${g.label}">
+                                    <option value="all" th:each="o : ${g.options}" th:value="${o.slug}"
+                                            th:text="${o.label}" th:selected="${o.slug == criteria.category}">Shoes</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <fieldset class="filter-group">
+                            <legend class="legend">Price in euros</legend>
+                            <div class="filter-pair">
+                                <div>
+                                    <label class="visually-hidden" for="f-min">Minimum price</label>
+                                    <input class="input" id="f-min" type="number" name="minPrice" min="0" step="0.01"
+                                           inputmode="decimal" placeholder="Min" th:value="${criteria.minPrice}">
+                                </div>
+                                <span aria-hidden="true">to</span>
+                                <div>
+                                    <label class="visually-hidden" for="f-max">Maximum price</label>
+                                    <input class="input" id="f-max" type="number" name="maxPrice" min="0" step="0.01"
+                                           inputmode="decimal" placeholder="Max" th:value="${criteria.maxPrice}">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="filter-group">
+                            <legend class="legend">Condition</legend>
+                            <label class="checkbox" th:each="c : ${conditions}">
+                                <input type="checkbox" name="conditions" value="NEW" th:value="${c.name()}"
+                                       th:checked="${criteria.conditions.contains(c)}">
+                                <span th:text="#{${'condition.' + c.name()}}">New</span>
+                            </label>
+                        </fieldset>
+
+                        <div class="filter-group">
+                            <label class="label" for="f-city">City</label>
+                            <input class="input" id="f-city" type="text" name="city" maxlength="80" list="f-city-options"
+                                   autocomplete="off" th:value="${criteria.city}">
+                            <datalist id="f-city-options">
+                                <option value="Kaunas" th:each="c : ${cities}" th:value="${c}"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="label" for="f-size">Size</label>
+                            <input class="input" id="f-size" type="text" name="size" maxlength="20"
+                                   placeholder="M, 42, 28 inch" th:value="${criteria.size}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="label" for="f-color">Color</label>
+                            <input class="input" id="f-color" type="text" name="color" maxlength="30" th:value="${criteria.color}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="label" for="f-brand">Brand</label>
+                            <input class="input" id="f-brand" type="text" name="brand" maxlength="60" th:value="${criteria.brand}">
+                        </div>
+
+                        <label class="checkbox">
+                            <input type="checkbox" name="includeUnavailable" value="true" th:checked="${criteria.includeUnavailable}">
+                            <span>Include reserved and sold items</span>
+                        </label>
+
+                        <input type="hidden" name="sort" value="price_asc" th:if="${criteria.sortKey != 'newest'}"
+                               th:value="${criteria.sortKey}">
+
+                        <div class="filters__actions">
+                            <button class="btn btn--primary" type="submit">Show results</button>
+                            <a class="btn btn--ghost" href="/listings" th:href="@{/listings}">Clear all</a>
+                        </div>
+                    </form>
+                </details>
+            </aside>
+
+            <section aria-labelledby="results-title">
+                <h2 class="visually-hidden" id="results-title">Results</h2>
+
+                <div class="results-head">
+                    <p class="results-count" role="status">
+                        <strong th:text="${page.totalElements}">24</strong>
+                        <span th:text="${page.totalElements == 1} ? 'listing' : 'listings'">listings</span>
+                    </p>
+
+                    <form class="sort-form" method="get" action="/listings" th:action="@{/listings}">
+                        <input type="hidden" name="q" value="" th:each="p : ${hiddenParams}" th:name="${p[0]}" th:value="${p[1]}">
+                        <label class="label" for="sort">Sort by</label>
+                        <select class="select" id="sort" name="sort" data-auto-submit>
+                            <option value="newest" th:each="o : ${sortOptions}" th:value="${o.key}" th:text="${o.value}"
+                                    th:selected="${o.key == criteria.sortKey}">Newest first</option>
+                        </select>
+                        <noscript><button class="btn btn--secondary btn--sm" type="submit">Sort</button></noscript>
+                    </form>
+                </div>
+
+                <ul class="chip-row" aria-label="Active filters" th:if="${!chips.isEmpty()}">
+                    <li th:each="chip : ${chips}">
+                        <a class="chip chip--remove" href="/listings" th:href="@{${chip.removeUrl}}">
+                            <span th:text="${chip.label}">Nike</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                                <path d="M6 6l12 12"/>
+                                <path d="M18 6L6 18"/>
+                            </svg>
+                            <span class="visually-hidden">Remove this filter</span>
+                        </a>
+                    </li>
+                    <li><a class="link-quiet" href="/listings" th:href="@{/listings}">Clear all</a></li>
+                </ul>
+
+                <ul class="listing-grid" th:unless="${page.empty}">
+                    <li th:each="l : ${page.content}"><article th:replace="~{fragments/listing-card :: card(${l})}"></article></li>
+                </ul>
+
+                <div class="empty-state" th:if="${page.empty}">
+                    <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M21 21l-4.3-4.3"/>
+                    </svg>
+                    <h3 class="empty-state__title">Nothing matches these filters</h3>
+                    <p>Try fewer keywords, a wider price range or another category. Reserved and sold items are hidden unless you include them.</p>
+                    <div class="cluster">
+                        <a class="btn btn--primary" href="/listings" th:href="@{/listings}">Clear all filters</a>
+                        <a class="btn btn--secondary" href="/listings/new" th:href="@{/listings/new}">Sell an item</a>
+                    </div>
+                </div>
+
+                <div th:replace="~{listings/fragments :: pagination(${pageWindow}, ${page.number + 1}, ${page.totalPages}, ${pageBase})}"></div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/catalog.js" th:src="@{/js/catalog.js}" data-suggest-url="/api/search/suggest"
+        th:attr="data-suggest-url=@{/api/search/suggest},data-listing-url=@{/listings/}" defer></script>
+</body>
+</html>

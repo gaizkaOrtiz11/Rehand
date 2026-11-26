@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  FORM FIELD FRAGMENTS. Each fragment renders: label, control, hint and Bean Validation errors.
+
+  They MUST be placed inside a form that has a th:object, because they bind with th:field:
+
+  <form class="form" th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
+    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+    <div th:replace="~{fragments/forms :: textField('email', 'Email address', 'email', true, 'We never show it to other members.')}"></div>
+    <div th:replace="~{fragments/forms :: textField('city', 'City', 'text', false, null)}"></div>
+    <div th:replace="~{fragments/forms :: numberField('price', 'Price in euros', '0.01', null, '0.01', true, null)}"></div>
+    <div th:replace="~{fragments/forms :: textarea('description', 'Description', 6, true, null)}"></div>
+    <div th:replace="~{fragments/forms :: select('condition', 'Condition', ${conditionOptions}, true, 'Choose a condition', null)}"></div>
+    <div th:replace="~{fragments/forms :: checkbox('notify', 'Alert me about new matches', null)}"></div>
+    <div class="form-actions"><button class="btn btn--primary" type="submit">Create account</button></div>
+  </form>
+
+  Parameters
+  - field    : property name on the th:object. It becomes the element id and name.
+  - label    : visible label text.
+  - type     : text, email, password, tel, url, search ...
+  - required : true adds the HTML5 required attribute and a red asterisk.
+  - hint     : helper text or null.
+  - min, max, step (numberField) : strings or null.
+  - options  : Map (value -> label), for example a LinkedHashMap built in the controller.
+  - placeholder (select) : text of the empty first option, or null for no empty option.
+
+  Because the id equals the field name, two forms on one page that use the same field name
+  would produce duplicate ids. In that case write the markup by hand.
+-->
+<body>
+
+<div class="field"
+     th:fragment="textField(field, label, type, required, hint)"
+     th:classappend="${(#fields.hasErrors(field) ? 'has-error ' : '') + (required ? 'is-required' : '')}">
+    <label class="label" th:for="${field}" th:text="${label}">Label</label>
+    <input class="input" type="text" th:type="${type}" th:id="${field}" th:field="*{__${field}__}"
+           th:required="${required}"
+           th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field"
+     th:fragment="numberField(field, label, min, max, step, required, hint)"
+     th:classappend="${(#fields.hasErrors(field) ? 'has-error ' : '') + (required ? 'is-required' : '')}">
+    <label class="label" th:for="${field}" th:text="${label}">Label</label>
+    <input class="input" type="number" inputmode="decimal" th:id="${field}" th:field="*{__${field}__}"
+           th:min="${min}" th:max="${max}" th:step="${step}"
+           th:required="${required}"
+           th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field"
+     th:fragment="textarea(field, label, rows, required, hint)"
+     th:classappend="${(#fields.hasErrors(field) ? 'has-error ' : '') + (required ? 'is-required' : '')}">
+    <label class="label" th:for="${field}" th:text="${label}">Label</label>
+    <textarea class="textarea" rows="5" th:rows="${rows}" th:id="${field}" th:field="*{__${field}__}"
+              th:required="${required}"
+              th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}"></textarea>
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field"
+     th:fragment="select(field, label, options, required, placeholder, hint)"
+     th:classappend="${(#fields.hasErrors(field) ? 'has-error ' : '') + (required ? 'is-required' : '')}">
+    <label class="label" th:for="${field}" th:text="${label}">Label</label>
+    <select class="select" th:id="${field}" th:field="*{__${field}__}"
+            th:required="${required}"
+            th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+        <option value="" th:if="${placeholder != null}" th:text="${placeholder}">Choose</option>
+        <option th:each="opt : ${options}" th:value="${opt.key}" th:text="${opt.value}">Option</option>
+    </select>
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field"
+     th:fragment="checkbox(field, label, hint)"
+     th:classappend="${#fields.hasErrors(field) ? 'has-error' : ''}">
+    <label class="checkbox" th:for="${field}">
+        <input type="checkbox" th:id="${field}" th:field="*{__${field}__}"
+               th:attr="aria-describedby=${field + '-help'}">
+        <span th:text="${label}">Label</span>
+    </label>
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<!-- Hint text and error messages under a control (aria-describedby points at this div) -->
+<div class="field-help" th:fragment="fieldHelp(field, hint)" th:id="${field + '-help'}">
+    <p class="field-hint" th:if="${hint != null}" th:text="${hint}">Hint</p>
+    <div class="field-error" th:if="${#fields.hasErrors(field)}">
+        <p th:each="err : ${#fields.errors(field)}" th:text="${err}">Error</p>
+    </div>
+</div>
+
+<!-- Errors that belong to the whole form (for example "passwords do not match") -->
+<div class="form-errors" role="alert" th:fragment="globalErrors" th:if="${#fields.hasGlobalErrors()}">
+    <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global error</p>
+</div>
+
+</body>
+</html>

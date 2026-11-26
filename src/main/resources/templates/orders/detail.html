@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss(${'Order #' + view.order.id}, '/css/orders.css')}">
+    <meta charset="utf-8">
+    <title>Order | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container" th:with="o=${view.order},l=${view.order.listing}">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/orders" th:href="@{/orders(tab=${view.seller ? 'sales' : 'purchases'})}"
+                       th:text="${view.seller} ? 'Sales' : 'Purchases'">Purchases</a></li>
+                <li><span aria-current="page" th:text="${'Order #' + o.id}">Order #5001</span></li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1 class="order-title">
+                    <span th:text="${'Order #' + o.id}">Order #5001</span>
+                    <span class="badge" th:classappend="${'badge--' + #strings.toLowerCase(o.status.name())}"
+                          th:text="#{${'orderStatus.' + o.status.name()}}">Paid</span>
+                </h1>
+                <p th:text="${view.nextStep}">Payment received. The seller has been asked to ship the item.</p>
+            </div>
+        </div>
+
+        <p class="alert alert--info" role="status" th:if="${view.adminView}">
+            You are viewing this order as an administrator.
+        </p>
+
+        <div class="order-layout">
+
+            <div class="order-layout__main">
+
+                <section class="panel" aria-labelledby="progress-title">
+                    <h2 class="panel__title" id="progress-title">Progress</h2>
+                    <ol class="timeline" th:classappend="${o.status.name() == 'CANCELLED'} ? 'timeline--cancelled'">
+                        <li class="timeline__step" th:each="step : ${view.timeline}"
+                            th:classappend="${'is-' + step.state}"
+                            th:attr="aria-current=${step.current} ? 'step'">
+                            <span class="timeline__marker" aria-hidden="true">
+                                <svg th:if="${step.state == 'done'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+                                <svg th:if="${step.state == 'cancelled'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                            </span>
+                            <span class="timeline__label" th:text="${step.label}">Paid</span>
+                            <time class="timeline__time" th:if="${step.at != null}"
+                                  datetime="2026-01-01T10:00" th:datetime="${#temporals.format(step.at, 'yyyy-MM-dd HH:mm')}"
+                                  th:text="${#temporals.format(step.at, 'd MMM, HH:mm')}">1 Jan, 10:00</time>
+                            <span class="timeline__time" th:if="${step.at == null}">Not yet</span>
+                        </li>
+                    </ol>
+                    <p class="order-note" th:if="${view.autoCompleteAt != null}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3 2"/>
+                        </svg>
+                        <span>
+                            If nobody reports a problem, the payment is released to the seller automatically
+                            <span th:text="${view.autoCompleteHours}">48</span> hours after delivery, on
+                            <time datetime="2026-01-03T10:00" th:datetime="${#temporals.format(view.autoCompleteAt, 'yyyy-MM-dd HH:mm')}"
+                                  th:text="${#temporals.format(view.autoCompleteAt, 'd MMM') + ' at ' + #temporals.format(view.autoCompleteAt, 'HH:mm')}">3 Jan at 10:00</time>.
+                        </span>
+                    </p>
+                </section>
+
+                <section class="panel panel--tint order-actions" aria-labelledby="actions-title" th:if="${view.hasActions}">
+                    <h2 class="panel__title" id="actions-title">What you can do now</h2>
+
+                    <form class="form order-action" action="/orders/1/ship" method="post" novalidate th:if="${view.canShip}"
+                          th:action="@{/orders/{id}/ship(id=${o.id})}" th:object="${shipForm}">
+                        <div th:replace="~{fragments/forms :: textField('trackingCode', 'Tracking code', 'text', true, 'From the carrier receipt, 4 to 60 characters.')}"></div>
+                        <div class="form-actions">
+                            <button class="btn btn--primary" type="submit">Mark as shipped</button>
+                        </div>
+                    </form>
+
+                    <form class="order-action" action="/orders/1/deliver" method="post" th:if="${view.canConfirmDelivery}"
+                          th:action="@{/orders/{id}/deliver(id=${o.id})}">
+                        <p>Has the parcel arrived? Confirm it here, then check the item.</p>
+                        <button class="btn btn--primary" type="submit">Confirm delivery</button>
+                    </form>
+
+                    <form class="order-action" action="/orders/1/complete" method="post" th:if="${view.canComplete}"
+                          th:action="@{/orders/{id}/complete(id=${o.id})}"
+                          data-confirm="Release the payment to the seller? This cannot be undone.">
+                        <p>Is the item as described? Releasing the payment completes the order.</p>
+                        <button class="btn btn--primary" type="submit">All good, release payment</button>
+                    </form>
+
+                    <details class="order-cancel" th:if="${view.canCancel}" th:open="${cancelOpen}">
+                        <summary class="order-cancel__summary">Cancel this order</summary>
+                        <form class="form order-action" action="/orders/1/cancel" method="post" novalidate
+                              th:action="@{/orders/{id}/cancel(id=${o.id})}" th:object="${cancelForm}"
+                              data-confirm="Cancel this order? The buyer gets a full refund and the item goes back on sale.">
+                            <p>The buyer gets the full price back and the item is for sale again.</p>
+                            <div th:replace="~{fragments/forms :: textarea('reason', 'Reason (optional)', 3, false, 'Up to 200 characters. Shown to the other party.')}"></div>
+                            <div class="form-actions">
+                                <button class="btn btn--danger" type="submit">Cancel order</button>
+                            </div>
+                        </form>
+                    </details>
+                </section>
+
+                <section class="panel" aria-labelledby="item-title">
+                    <h2 class="panel__title" id="item-title">Item</h2>
+                    <div class="order-item order-item--lg">
+                        <img class="order-item__thumb" src="/img/placeholder-photo.svg" width="96" height="120" alt=""
+                             th:src="${l.firstPhotoUrl != null} ? @{${l.firstPhotoUrl}} : @{/img/placeholder-photo.svg}">
+                        <div class="order-item__text">
+                            <p class="order-item__title">
+                                <a href="/listings/1" th:href="@{/listings/{id}(id=${l.id})}" th:text="${l.title}">Listing title</a>
+                            </p>
+                            <p class="order-item__meta">
+                                <span th:text="#{${'condition.' + l.condition.name()}}">Very good</span>
+                                <span th:if="${l.brand != null}" th:text="${', ' + l.brand}">, Zara</span>
+                            </p>
+                        </div>
+                        <p class="order-item__price price" th:text="'€' + ${#numbers.formatDecimal(o.price, 1, 'COMMA', 2, 'POINT')}">€24.50</p>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="order-layout__side">
+
+                <section class="panel" aria-labelledby="people-title">
+                    <h2 class="panel__title" id="people-title" th:text="${view.adminView} ? 'Buyer and seller' : ${view.counterpartRole}">Seller</h2>
+                    <div class="person" th:if="${!view.adminView}">
+                        <img class="person__avatar" src="/img/placeholder-photo.svg" width="48" height="48" alt=""
+                             th:if="${view.counterpart.avatarPath != null}" th:src="@{'/uploads/' + ${view.counterpart.avatarPath}}">
+                        <span class="person__avatar person__avatar--initials" aria-hidden="true"
+                              th:if="${view.counterpart.avatarPath == null}" th:text="${view.counterpartInitials}">AK</span>
+                        <div>
+                            <a class="person__name" href="/users/2" th:href="@{/users/{id}(id=${view.counterpart.id})}"
+                               th:text="${view.counterpart.username}">ausra_k</a>
+                            <p class="person__meta" th:if="${view.counterpart.city != null}" th:text="${view.counterpart.city}">Kaunas</p>
+                        </div>
+                    </div>
+                    <dl class="meta-list" th:if="${view.adminView}">
+                        <dt>Buyer</dt>
+                        <dd><a href="/users/3" th:href="@{/users/{id}(id=${o.buyer.id})}" th:text="${o.buyer.username}">mikel_b</a></dd>
+                        <dt>Seller</dt>
+                        <dd><a href="/users/2" th:href="@{/users/{id}(id=${o.seller.id})}" th:text="${o.seller.username}">ausra_k</a></dd>
+                    </dl>
+                </section>
+
+                <section class="panel" aria-labelledby="ship-title">
+                    <h2 class="panel__title" id="ship-title">Shipping</h2>
+                    <address class="ship-address">
+                        <strong th:text="${o.shipping.name}">Mikel Bilbao</strong><br>
+                        <span th:text="${o.shipping.street}">Laisvės al. 10-4</span><br>
+                        <span th:text="${o.shipping.postalCode + ' ' + o.shipping.city}">LT-44248 Kaunas</span>
+                    </address>
+                    <div class="tracking" th:if="${o.trackingCode != null}">
+                        <p class="tracking__label">Tracking code</p>
+                        <p class="tracking__code" th:text="${o.trackingCode}">LP123456789LT</p>
+                    </div>
+                    <p class="text-muted ship-pending" th:if="${o.trackingCode == null and o.status.name() == 'PAID'}">
+                        The tracking code appears here once the seller ships.
+                    </p>
+                </section>
+
+                <section class="panel" aria-labelledby="pay-title">
+                    <h2 class="panel__title" id="pay-title">Payment</h2>
+                    <dl class="sum-lines">
+                        <div>
+                            <dt>Paid from wallet</dt>
+                            <dd class="price" th:text="'€' + ${#numbers.formatDecimal(o.price, 1, 'COMMA', 2, 'POINT')}">€24.50</dd>
+                        </div>
+                        <div>
+                            <dt>Money is</dt>
+                            <dd th:switch="${o.status.name()}">
+                                <span th:case="'COMPLETED'">with the seller</span>
+                                <span th:case="'CANCELLED'">refunded to the buyer</span>
+                                <span th:case="*">on hold</span>
+                            </dd>
+                        </div>
+                    </dl>
+                    <a class="order-wallet-link" href="/wallet" th:href="@{/wallet}" th:unless="${view.adminView}">See your wallet history</a>
+                </section>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

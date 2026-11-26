@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Top up your wallet', '/css/wallet.css')}">
+    <meta charset="utf-8">
+    <title>Top up your wallet | Rehand</title>
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/wallet" th:href="@{/wallet}">Wallet</a></li>
+                <li><span aria-current="page">Top up</span></li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <div>
+                <h1>Top up your wallet</h1>
+                <p>Add between €5 and €1,000 at a time with a test card.</p>
+            </div>
+        </div>
+
+        <div class="wallet-split">
+            <form class="panel panel--raised form wallet-form" action="/wallet/top-up" method="post"
+                  th:action="@{/wallet/top-up}" th:object="${topUpForm}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <input type="hidden" name="returnTo" value="/" th:if="*{returnTo != null}" th:value="*{returnTo}">
+
+                <fieldset class="form-section">
+                    <legend class="form-section__title">Amount</legend>
+                    <div class="amount-chips">
+                        <label class="amount-chip" th:each="p : ${presets}">
+                            <input class="amount-chip__input" type="radio" name="preset" value="25" th:value="${p}"
+                                   th:checked="${!topUpForm.custom and topUpForm.preset == p}">
+                            <span class="amount-chip__face" th:text="'€' + ${p}">€25</span>
+                        </label>
+                        <label class="amount-chip">
+                            <input class="amount-chip__input" type="radio" name="preset" value="custom" th:checked="${topUpForm.custom}">
+                            <span class="amount-chip__face">Other</span>
+                        </label>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('customAmount') or #fields.hasErrors('amount')} ? 'has-error'">
+                        <label class="label" for="customAmount">Other amount in euros</label>
+                        <input class="input amount-input" id="customAmount" type="number" inputmode="decimal"
+                               min="5.00" max="1000.00" step="0.01" placeholder="For example 37.50"
+                               th:field="*{customAmount}" aria-describedby="amount-help">
+                        <div class="field-help" id="amount-help">
+                            <p class="field-hint">A typed amount replaces the chip you picked.</p>
+                            <div class="field-error" th:if="${#fields.hasErrors('customAmount')}">
+                                <p th:each="err : ${#fields.errors('customAmount')}" th:text="${err}">Error</p>
+                            </div>
+                            <div class="field-error" th:if="${#fields.hasErrors('amount') and !#fields.hasErrors('customAmount')}">
+                                <p th:each="err : ${#fields.errors('amount')}" th:text="${err}">Error</p>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend class="form-section__title">Card details</legend>
+                    <p class="sim-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        <span><strong>Simulated payment: no card data is stored.</strong>
+                            Try the test number 4242 4242 4242 4242 with any future date and any 3 digits.</span>
+                    </p>
+
+                    <div class="field is-required" th:classappend="${#fields.hasErrors('cardholderName')} ? 'has-error'">
+                        <label class="label" for="cardholderName">Name on card</label>
+                        <input class="input" id="cardholderName" type="text" autocomplete="cc-name" maxlength="100" required
+                               th:field="*{cardholderName}" aria-describedby="cardholderName-help">
+                        <div th:replace="~{fragments/forms :: fieldHelp('cardholderName', null)}"></div>
+                    </div>
+
+                    <div class="field is-required" th:classappend="${#fields.hasErrors('cardNumber')} ? 'has-error'">
+                        <label class="label" for="cardNumber">Card number</label>
+                        <input class="input input--mono" id="cardNumber" name="cardNumber" type="text" inputmode="numeric"
+                               autocomplete="cc-number" maxlength="23" pattern="[0-9 ]{13,23}" required
+                               aria-describedby="cardNumber-help">
+                        <div th:replace="~{fragments/forms :: fieldHelp('cardNumber', 'For your safety the card number and security code are cleared if the form has errors.')}"></div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field is-required" th:classappend="${#fields.hasErrors('expiry')} ? 'has-error'">
+                            <label class="label" for="expiry">Expiry date</label>
+                            <input class="input input--mono" id="expiry" type="text" inputmode="numeric" autocomplete="cc-exp"
+                                   maxlength="7" placeholder="MM/YY" pattern="\d{2}\s*/\s*\d{2}" required
+                                   th:field="*{expiry}" aria-describedby="expiry-help">
+                            <div th:replace="~{fragments/forms :: fieldHelp('expiry', null)}"></div>
+                        </div>
+                        <div class="field is-required" th:classappend="${#fields.hasErrors('cvc')} ? 'has-error'">
+                            <label class="label" for="cvc">Security code</label>
+                            <input class="input input--mono" id="cvc" name="cvc" type="text" inputmode="numeric"
+                                   autocomplete="cc-csc" maxlength="4" pattern="\d{3,4}" required
+                                   aria-describedby="cvc-help">
+                            <div th:replace="~{fragments/forms :: fieldHelp('cvc', '3 or 4 digits on the back.')}"></div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button class="btn btn--primary btn--lg" type="submit">Add money</button>
+                    <a class="btn btn--ghost" href="/wallet"
+                       th:href="${topUpForm.returnTo != null} ? @{${topUpForm.returnTo}} : @{/wallet}">Cancel</a>
+                </div>
+            </form>
+
+            <aside class="wallet-aside" aria-labelledby="aside-title">
+                <div class="balance-mini">
+                    <h2 class="balance-mini__label" id="aside-title">Current balance</h2>
+                    <p class="balance-mini__amount price" th:text="'€' + ${#numbers.formatDecimal(balance, 1, 'COMMA', 2, 'POINT')}">€150.00</p>
+                </div>
+                <ul class="aside-points">
+                    <li>The money is available straight away for buying items.</li>
+                    <li th:if="${topUpForm.returnTo != null}">After the top-up you go back to where you were, for example your checkout.</li>
+                    <li>You can withdraw what you do not spend at any time.</li>
+                </ul>
+            </aside>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/wallet.js" th:src="@{/js/wallet.js}" defer></script>
+</body>
+</html>

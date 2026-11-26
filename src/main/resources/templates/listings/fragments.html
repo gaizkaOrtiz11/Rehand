@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Catalog fragments</title>
+</head>
+<!--
+  CATALOG FRAGMENTS (Thymeleaf), used by the browse, seller and "my listings" pages.
+
+  pagination(window, current, total, base)
+    window  : list of page numbers, 0 means a gap (PageNav.window)
+    current : current page, 1-based
+    total   : number of pages (nothing is rendered when it is 1 or less)
+    base    : URL prefix that ends in "?" or "&", for example "/listings?q=jacket&"; "page=N" is appended
+-->
+<body>
+
+<nav class="pagination" aria-label="Pagination" th:fragment="pagination(window, current, total, base)" th:if="${total > 1}">
+    <ul class="pagination__list">
+        <li>
+            <a class="pagination__link" rel="prev" href="?page=1" th:if="${current > 1}"
+               th:href="@{${base + 'page=' + (current - 1)}}">Previous</a>
+            <span class="pagination__link is-disabled" aria-disabled="true" th:unless="${current > 1}">Previous</span>
+        </li>
+        <li th:each="p : ${window}">
+            <span class="pagination__link is-disabled" th:if="${p == 0}">&hellip;</span>
+            <span class="pagination__link is-current" aria-current="page" th:if="${p != 0 and p == current}"
+                  th:text="${p}">1</span>
+            <a class="pagination__link" href="?page=2" th:if="${p != 0 and p != current}"
+               th:href="@{${base + 'page=' + p}}" th:attr="aria-label=${'Page ' + p}" th:text="${p}">2</a>
+        </li>
+        <li>
+            <a class="pagination__link" rel="next" href="?page=2" th:if="${current < total}"
+               th:href="@{${base + 'page=' + (current + 1)}}">Next</a>
+            <span class="pagination__link is-disabled" aria-disabled="true" th:unless="${current < total}">Next</span>
+        </li>
+    </ul>
+</nav>
+
+</body>
+</html>

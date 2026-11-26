@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Log in', '/css/account.css')}">
+    <meta charset="utf-8">
+    <title>Log in | Rehand</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+        <div class="auth">
+
+            <section aria-labelledby="login-title">
+                <div class="page-header">
+                    <div>
+                        <h1 id="login-title">Log in</h1>
+                        <p>Welcome back. Use the email address you registered with.</p>
+                    </div>
+                </div>
+
+                <p class="alert alert--error" role="alert" th:if="${param.error != null}">Wrong email or password. Please try again.</p>
+                <p class="alert alert--error" role="alert" th:if="${param.banned != null}">This account has been suspended by a moderator, so it cannot log in.</p>
+                <p class="alert alert--success" role="status" th:if="${param.registered != null}">Your account is ready. Log in to continue.</p>
+                <p class="alert alert--info" role="status" th:if="${param.logout != null}">You have been logged out.</p>
+
+                <form class="form panel panel--raised" action="/login" th:action="@{/login}" method="post">
+                    <div class="field is-required">
+                        <label class="label" for="email">Email address</label>
+                        <input class="input" type="email" id="email" name="email" required maxlength="255"
+                               autocomplete="username" autofocus>
+                    </div>
+                    <div class="field is-required">
+                        <label class="label" for="password">Password</label>
+                        <div class="password-field">
+                            <input class="input" type="password" id="password" name="password" required maxlength="72"
+                                   autocomplete="current-password" data-password-toggle>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="checkbox" for="remember-me">
+                            <input type="checkbox" id="remember-me" name="remember-me">
+                            <span>Keep me logged in on this device</span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn--primary btn--lg btn--block" type="submit">Log in</button>
+                    </div>
+                </form>
+            </section>
+
+            <aside class="auth__aside" aria-labelledby="join-title">
+                <h2 id="join-title">New to Rehand?</h2>
+                <p>Make an account to sell what you no longer use, send offers and chat with sellers. It is free.</p>
+                <a class="btn btn--secondary btn--lg" href="/register" th:href="@{/register}">Create an account</a>
+            </aside>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="/js/account.js" th:src="@{/js/account.js}" defer></script>
+</body>
+</html>

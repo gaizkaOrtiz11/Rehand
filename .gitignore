@@ -1,0 +1,23 @@
+# Build output
+target/
+
+# Uploaded images (created at runtime)
+uploads/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+.classpath
+.project
+.settings/
+nbproject/
+
+# Local settings and logs
+.env
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

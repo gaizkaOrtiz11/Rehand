@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{fragments/layout :: headWithCss('Your profile', '/css/account.css')}">
+    <meta charset="utf-8">
+    <title>Your profile | Rehand</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main id="main">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>Your profile</h1>
+                <p>What other members see, and the private details of your account.</p>
+            </div>
+            <div class="cluster">
+                <a class="btn btn--primary" href="/profile/edit" th:href="@{/profile/edit}">Edit profile</a>
+                <a class="btn btn--secondary" href="/profile/password" th:href="@{/profile/password}">Change password</a>
+            </div>
+        </div>
+
+        <div class="profile">
+
+            <section class="panel panel--raised profile-card" aria-labelledby="identity-title">
+                <div class="profile-card__head">
+                    <span th:replace="~{profile/fields :: avatar(${profileUser.avatarPath}, ${profileUser.username}, 'avatar-frame--xl')}"></span>
+                    <div>
+                        <h2 class="profile-card__name" id="identity-title" th:text="${profileUser.username}">ausra_k</h2>
+                        <p class="mt-4">
+                            <span class="badge badge--accent" th:if="${profileUser.admin}">Administrator</span>
+                            <span class="badge badge--neutral" th:unless="${profileUser.admin}">Member</span>
+                        </p>
+                    </div>
+                </div>
+
+                <dl class="meta-list">
+                    <dt>City</dt>
+                    <dd th:text="${profileUser.city != null} ? ${profileUser.city} : 'Not set'">Kaunas</dd>
+                    <dt>Member since</dt>
+                    <dd><time datetime="2026-01-01" th:datetime="${#temporals.format(profileUser.createdAt, 'yyyy-MM-dd')}"
+                              th:text="${#temporals.format(profileUser.createdAt, 'd MMMM yyyy')}">1 January 2026</time></dd>
+                    <dt>Email</dt>
+                    <dd th:text="${profileUser.email}">ausra@rehand.test</dd>
+                </dl>
+
+                <p class="profile-card__bio" th:if="${profileUser.bio != null}" th:text="${profileUser.bio}">Selling things I no longer use.</p>
+                <p class="profile-card__empty" th:unless="${profileUser.bio != null}">No bio yet. Add a few words in Edit profile so buyers know who they are dealing with.</p>
+            </section>
+
+            <div class="stack">
+                <section class="wallet-card" aria-labelledby="wallet-title">
+                    <h2 class="wallet-card__label" id="wallet-title"><a href="/wallet" th:href="@{/wallet}">Wallet balance</a></h2>
+                    <p class="wallet-card__amount price" th:text="'€' + ${#numbers.formatDecimal(balance, 1, 'COMMA', 2, 'POINT')}">€0.00</p>
+                    <p>This is simulated money. Nothing on Rehand is a real payment.</p>
+                    <div class="cluster mt-4">
+                        <a class="btn btn--primary btn--sm" href="/wallet/top-up" th:href="@{/wallet/top-up}">Top up</a>
+                        <a class="btn btn--secondary btn--sm" href="/wallet" th:href="@{/wallet}">History</a>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="links-title">
+                    <h2 class="panel__title" id="links-title">Quick links</h2>
+                    <ul class="link-list">
+                        <li>
+                            <a href="/my/listings" th:href="@{/my/listings}">
+                                <span>My listings</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/listings/new" th:href="@{/listings/new}">
+                                <span>Sell an item</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/users/1" th:href="@{/users/{id}(id=${profileUser.id})}">
+                                <span>See my public page</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

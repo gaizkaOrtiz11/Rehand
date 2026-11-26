@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  FORM AND AVATAR FRAGMENTS FOR THE ACCOUNT PAGES (register, login, profile).
+
+  Like fragments/forms.html they MUST be used inside a form with a th:object, because they bind with th:field.
+  Unlike forms.html they also set the HTML5 attributes the account forms need (autocomplete, minlength,
+  maxlength, pattern, title). Pass null for any attribute you do not need.
+
+  <div th:replace="~{profile/fields :: textInput('email', 'Email address', 'email', 'email', true, null, 255, 'Used to log in. Other members never see it.')}"></div>
+      textInput(field, label, type, autocomplete, required, minlength, maxlength, hint)
+
+  <div th:replace="~{profile/fields :: newPasswordInput('password', 'Password', null)}"></div>
+      newPasswordInput(field, label, hint): minlength 8, maxlength 72 and the letter+digit pattern (autocomplete new-password).
+
+  <div th:replace="~{profile/fields :: passwordInput('currentPassword', 'Current password', 'current-password', null)}"></div>
+      passwordInput(field, label, autocomplete, hint): required, no extra rules (current and confirm fields).
+
+  account.js adds the Show/Hide button inside the .password-field wrapper of both password fragments.
+
+  <span th:replace="~{profile/fields :: avatar(${user.avatarPath}, ${user.username}, 'avatar-frame--xl')}"></span>
+      avatar(path, name, sizeClass): the uploaded photo, or the first letter of the name on a tinted circle.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Account fragments</title>
+</head>
+<body>
+
+<div class="field"
+     th:fragment="textInput(field, label, type, autocomplete, required, minlength, maxlength, hint)"
+     th:classappend="${(#fields.hasErrors(field) ? 'has-error ' : '') + (required ? 'is-required' : '')}">
+    <label class="label" for="field" th:for="${field}" th:text="${label}">Label</label>
+    <input class="input" type="text" id="field" th:type="${type}" th:id="${field}" th:field="*{__${field}__}"
+           th:required="${required}" th:minlength="${minlength}" th:maxlength="${maxlength}"
+           th:autocomplete="${autocomplete}"
+           th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field is-required"
+     th:fragment="newPasswordInput(field, label, hint)"
+     th:classappend="${#fields.hasErrors(field) ? 'has-error' : ''}">
+    <label class="label" for="field" th:for="${field}" th:text="${label}">Label</label>
+    <div class="password-field">
+        <input class="input" type="password" id="field" th:id="${field}" th:field="*{__${field}__}"
+               required minlength="8" maxlength="72" pattern="(?=.*[A-Za-z])(?=.*[0-9]).*"
+               title="At least one letter and one digit" autocomplete="new-password" data-password-toggle
+               th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+    </div>
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<div class="field is-required"
+     th:fragment="passwordInput(field, label, autocomplete, hint)"
+     th:classappend="${#fields.hasErrors(field) ? 'has-error' : ''}">
+    <label class="label" for="field" th:for="${field}" th:text="${label}">Label</label>
+    <div class="password-field">
+        <input class="input" type="password" id="field" th:id="${field}" th:field="*{__${field}__}"
+               required maxlength="72" th:autocomplete="${autocomplete}" data-password-toggle
+               th:attr="aria-describedby=${field + '-help'},aria-invalid=${#fields.hasErrors(field) ? 'true' : 'false'}">
+    </div>
+    <div th:replace="~{fragments/forms :: fieldHelp(${field}, ${hint})}"></div>
+</div>
+
+<span class="avatar-frame" th:fragment="avatar(path, name, sizeClass)" th:classappend="${sizeClass}">
+    <img class="avatar-frame__img" th:if="${path != null}" src="/img/placeholder-photo.svg"
+         th:src="@{'/uploads/' + ${path}}" alt="Profile photo" th:alt="${'Profile photo of ' + name}">
+    <span aria-hidden="true" th:unless="${path != null}"
+          th:text="${#strings.toUpperCase(#strings.substring(name, 0, 1))}">A</span>
+</span>
+
+</body>
+</html>
